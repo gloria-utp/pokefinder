@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéFinder - Favoritos</title>
+    <link rel="icon" href="logo.ico" type="image/x-icon">
+    <style>
+        /* ===== VARIABLES CSS (Mismas que index.html) ===== */
+        :root {
+            --color-bg: #f5e6d3;
+            --color-primary: #2d2d2d;
+            --color-accent: #ffcc00;
+            --color-secondary: #ff6b6b;
+            --color-success: #4ecdc4;
+            --color-error: #ff6b6b;
+            --color-warning: #ffa500;
+            --color-api: #4ecdc4;
+            --color-cache: #ffcc00;
+            --color-expired: #ffa500;
+            --border-width: 4px;
+            --border-color: #2d2d2d;
+            --shadow: 6px 6px 0px #2d2d2d;
+            --font-family: 'Courier New', monospace;
+            --transition: all 0.1s ease;
+        }
+
+        /* ===== RESET Y ESTILOS BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            font-family: var(--font-family);
+            color: var(--color-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* ===== NAVEGACIÓN ===== */
+        .nav {
+            background-color: var(--color-primary);
+            border-bottom: var(--border-width) solid var(--border-color);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-list {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid transparent;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            border-color: var(--color-accent);
+            transform: translate(-2px, -2px);
+        }
+
+        .nav-link.active {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        /* ===== TÍTULOS ===== */
+        h1,
+        h2,
+        h3 {
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin: 2rem 0 3rem;
+            padding: 1.5rem;
+            border: var(--border-width) solid var(--border-color);
+            background-color: var(--color-accent);
+            box-shadow: var(--shadow);
+            transform: rotate(-1deg);
+        }
+
+        /* ===== CONTROLES DE FAVORITOS ===== */
+        .favorites-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== BOTONES ===== */
+        .btn {
+            padding: 1rem 2rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+            font-size: 1rem;
+            border: var(--border-width) solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-secondary);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--color-error);
+            color: white;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translate(-3px, -3px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translate(0, 0);
+            box-shadow: none;
+        }
+
+        /* ===== GRID DE FAVORITOS ===== */
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .favorites-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== TARJETA DE FAVORITO ===== */
+        .favorite-card {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+            cursor: pointer;
+        }
+
+        .favorite-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 10px 10px 0px var(--color-primary);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== CABECERA DE LA TARJETA ===== */
+        .favorite-card-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .favorite-remove-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--color-error);
+            transition: var(--transition);
+            padding: 0.25rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+        }
+
+        .favorite-remove-btn:hover {
+            background-color: var(--color-error);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        /* ===== CONTENIDO DE LA TARJETA ===== */
+        .favorite-card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .favorite-sprite {
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+            border: 3px solid var(--border-color);
+            background-color: #f0f0f0;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+        }
+
+        .favorite-info {
+            width: 100%;
+        }
+
+        .favorite-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            color: var(--color-primary);
+        }
+
+        .favorite-id {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .favorite-types {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== BADGE DE TIPO ===== */
+        .type-badge {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid var(--color-primary);
+        }
+
+        .type-normal {
+            background-color: #A8A878;
+            color: white;
+        }
+
+        .type-fire {
+            background-color: #F08030;
+            color: white;
+        }
+
+        .type-water {
+            background-color: #6890F0;
+            color: white;
+        }
+
+        .type-electric {
+            background-color: #F8D030;
+            color: black;
+        }
+
+        .type-grass {
+            background-color: #78C850;
+            color: white;
+        }
+
+        .type-ice {
+            background-color: #98D8D8;
+            color: black;
+        }
+
+        .type-fighting {
+            background-color: #C03028;
+            color: white;
+        }
+
+        .type-poison {
+            background-color: #A040A0;
+            color: white;
+        }
+
+        .type-ground {
+            background-color: #E0C068;
+            color: black;
+        }
+
+        .type-flying {
+            background-color: #A890F0;
+            color: white;
+        }
+
+        .type-psychic {
+            background-color: #F85888;
+            color: white;
+        }
+
+        .type-bug {
+            background-color: #A8B820;
+            color: white;
+        }
+
+        .type-rock {
+            background-color: #B8A038;
+            color: white;
+        }
+
+        .type-ghost {
+            background-color: #705898;
+            color: white;
+        }
+
+        .type-dragon {
+            background-color: #7038F8;
+            color: white;
+        }
+
+        .type-dark {
+            background-color: #705848;
+            color: white;
+        }
+
+        .type-steel {
+            background-color: #B8B8D0;
+            color: black;
+        }
+
+        .type-fairy {
+            background-color: #EE99AC;
+            color: black;
+        }
+
+        /* ===== ESTADÍSTICAS BÁSICAS ===== */
+        .favorite-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background-color: #f9f9f9;
+            border: 2px solid #ddd;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        /* ===== ACCIONES DE LA TARJETA ===== */
+        .favorite-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .favorite-card-actions .btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* ===== INDICADOR DE FAVORITO ===== */
+        .favorite-indicator {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--color-secondary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--color-secondary);
+            z-index: 1;
+        }
+
+        /* ===== ESTADO VACÍO ===== */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            border: var(--border-width) dashed var(--color-primary);
+            margin-top: 2rem;
+            background-color: white;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            color: var(--color-secondary);
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: #666;
+        }
+
+        /* ===== MODAL DE CONFIRMACIÓN ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal p {
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav-list {
+                gap: 1rem;
+            }
+
+            .nav-link {
+                font-size: 1rem;
+                padding: 0.5rem;
+            }
+
+            .favorites-controls {
+                flex-direction: column;
+            }
+
+            .favorites-controls .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .favorite-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .favorite-card-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .favorite-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVEGACIÓN -->
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="index.html" class="nav-link"><i class="fas fa-search"></i> Buscar</a></li>
+            <li><a href="historico.html" class="nav-link"><i class="fas fa-history"></i> Histórico</a></li>
+            <li><a href="favoritos.html" class="nav-link active"><i class="fas fa-heart"></i> Favoritos</a></li>
+            <li><a href="vs.html" class="nav-link"><i class="fas fa-fist-raised"></i> VS Battle</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- TÍTULO PRINCIPAL -->
+        <h1><i class="fas fa-heart"></i> POKÉMON FAVORITOS</h1>
+
+        <!-- CONTROLES -->
+        <div class="favorites-controls">
+            <button class="btn btn-danger" id="clear-favorites-btn">
+                <i class="fas fa-trash"></i> LIMPIAR TODOS LOS FAVORITOS
+            </button>
+            <button class="btn btn-primary" id="battle-favorites-btn">
+                <i class="fas fa-fist-raised"></i> BATALLAR FAVORITOS
+            </button>
+        </div>
+
+        <!-- CONTENEDOR DE FAVORITOS -->
+        <div id="favorites-container">
+            <!-- Grid de Pokémon favoritos -->
+            <div class="favorites-grid" id="favorites-grid">
+                <!-- Tarjeta de ejemplo 1 -->
+                <div class="favorite-card">
+                    <div class="favorite-indicator">
+                        <i class="fas fa-heart"></i>
+                    </div>
+
+                    <div class="favorite-card-header">
+                        <button class="favorite-remove-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="favorite-card-content">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+                            alt="Pikachu" class="favorite-sprite">
+
+                        <div class="favorite-info">
+                            <div class="favorite-name">PIKACHU</div>
+                            <div class="favorite-id">#025</div>
+
+                            <div class="favorite-types">
+                                <span class="type-badge type-electric">ELECTRIC</span>
+                            </div>
+
+                            <div class="favorite-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">HP</div>
+                                    <div class="stat-value">35</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">ATK</div>
+                                    <div class="stat-value">55</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">DEF</div>
+                                    <div class="stat-value">40</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">SPD</div>
+                                    <div class="stat-value">90</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="favorite-card-actions">
+                        <button class="btn btn-primary view-favorite-btn">
+                            <i class="fas fa-eye"></i> VER
+                        </button>
+                        <button class="btn btn-secondary battle-favorite-btn">
+                            <i class="fas fa-fist-raised"></i> VS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de ejemplo 2 -->
+                <div class="favorite-card">
+                    <div class="favorite-indicator">
+                        <i class="fas fa-heart"></i>
+                    </div>
+
+                    <div class="favorite-card-header">
+                        <button class="favorite-remove-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="favorite-card-content">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png"
+                            alt="Charizard" class="favorite-sprite">
+
+                        <div class="favorite-info">
+                            <div class="favorite-name">CHARIZARD</div>
+                            <div class="favorite-id">#006</div>
+
+                            <div class="favorite-types">
+                                <span class="type-badge type-fire">FIRE</span>
+                                <span class="type-badge type-flying">FLYING</span>
+                            </div>
+
+                            <div class="favorite-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">HP</div>
+                                    <div class="stat-value">78</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">ATK</div>
+                                    <div class="stat-value">84</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">DEF</div>
+                                    <div class="stat-value">78</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">SPD</div>
+                                    <div class="stat-value">100</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="favorite-card-actions">
+                        <button class="btn btn-primary view-favorite-btn">
+                            <i class="fas fa-eye"></i> VER
+                        </button>
+                        <button class="btn btn-secondary battle-favorite-btn">
+                            <i class="fas fa-fist-raised"></i> VS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de ejemplo 3 -->
+                <div class="favorite-card">
+                    <div class="favorite-indicator">
+                        <i class="fas fa-heart"></i>
+                    </div>
+
+                    <div class="favorite-card-header">
+                        <button class="favorite-remove-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="favorite-card-content">
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png"
+                            alt="Mewtwo" class="favorite-sprite">
+
+                        <div class="favorite-info">
+                            <div class="favorite-name">MEWTWO</div>
+                            <div class="favorite-id">#150</div>
+
+                            <div class="favorite-types">
+                                <span class="type-badge type-psychic">PSYCHIC</span>
+                            </div>
+
+                            <div class="favorite-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">HP</div>
+                                    <div class="stat-value">106</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">ATK</div>
+                                    <div class="stat-value">110</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">DEF</div>
+                                    <div class="stat-value">90</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">SPD</div>
+                                    <div class="stat-value">130</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="favorite-card-actions">
+                        <button class="btn btn-primary view-favorite-btn">
+                            <i class="fas fa-eye"></i> VER
+                        </button>
+                        <button class="btn btn-secondary battle-favorite-btn">
+                            <i class="fas fa-fist-raised"></i> VS
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado vacío (inicialmente oculto) -->
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-state-icon">
+                    <i class="fas fa-heart-broken"></i>
+                </div>
+                <h2>NO HAY FAVORITOS</h2>
+                <p>Agrega Pokémon a favoritos para verlos aquí</p>
+                <a href="index.html" class="btn btn-primary">
+                    <i class="fas fa-search"></i> BUSCAR POKÉMON
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal">
+            <h3><i class="fas fa-exclamation-triangle"></i> CONFIRMAR</h3>
+            <p id="modal-message">¿Estás seguro de que quieres realizar esta acción?</p>
+
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="modal-confirm-btn">
+                    <i class="fas fa-check"></i> CONFIRMAR
+                </button>
+                <button class="btn btn-secondary" id="modal-cancel-btn">
+                    <i class="fas fa-times"></i> CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATE: TARJETA DE FAVORITO -->
+    <template id="favorite-card-template">
+        <div class="favorite-card">
+            <div class="favorite-indicator">
+                <i class="fas fa-heart"></i>
+            </div>
+
+            <div class="favorite-card-header">
+                <button class="favorite-remove-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="favorite-card-content">
+                <img src="" alt="" class="favorite-sprite">
+
+                <div class="favorite-info">
+                    <div class="favorite-name">NOMBRE</div>
+                    <div class="favorite-id">#000</div>
+
+                    <div class="favorite-types">
+                        <!-- Tipos se agregarán dinámicamente -->
+                    </div>
+
+                    <div class="favorite-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">HP</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">ATK</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">DEF</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">SPD</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="favorite-card-actions">
+                <button class="btn btn-primary view-favorite-btn">
+                    <i class="fas fa-eye"></i> VER
+                </button>
+                <button class="btn btn-secondary battle-favorite-btn">
+                    <i class="fas fa-fist-raised"></i> VS
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // JavaScript básico para la interfaz de favoritos
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('confirm-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            const clearFavoritesBtn = document.getElementById('clear-favorites-btn');
+            const battleFavoritesBtn = document.getElementById('battle-favorites-btn');
+            const favoritesGrid = document.getElementById('favorites-grid');
+            const emptyState = document.getElementById('empty-state');
+
+            // Función para mostrar/ocultar estado vacío
+            function checkEmptyState() {
+                const cards = favoritesGrid.querySelectorAll('.favorite-card');
+                if (cards.length === 0) {
+                    favoritesGrid.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    favoritesGrid.style.display = 'grid';
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            // Eliminar favorito individual
+            document.querySelectorAll('.favorite-remove-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const card = this.closest('.favorite-card');
+
+                    modalMessage.textContent = '¿Estás seguro de que quieres eliminar este Pokémon de favoritos?';
+                    modal.style.display = 'flex';
+
+                    // Guardar referencia a la tarjeta a eliminar
+                    window.pendingDeleteCard = card;
+                });
+            });
+
+            // Ver Pokémon favorito
+            document.querySelectorAll('.view-favorite-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const card = this.closest('.favorite-card');
+                    const pokemonName = card.querySelector('.favorite-name').textContent;
+                    alert(`Redirigiendo a ${pokemonName}...`);
+                    // Aquí tus compañeros agregarán la redirección real
+                });
+            });
+
+            // VS Battle con Pokémon favorito
+            document.querySelectorAll('.battle-favorite-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const card = this.closest('.favorite-card');
+                    const pokemonName = card.querySelector('.favorite-name').textContent;
+                    alert(`Iniciando VS Battle con ${pokemonName}...`);
+                    // Aquí tus compañeros agregarán la lógica real
+                });
+            });
+
+            // Click en la tarjeta completa
+            document.querySelectorAll('.favorite-card').forEach(card => {
+                card.addEventListener('click', function (e) {
+                    if (!e.target.closest('button')) {
+                        const pokemonName = this.querySelector('.favorite-name').textContent;
+                        alert(`Redirigiendo a ${pokemonName}...`);
+                        // Aquí tus compañeros agregarán la redirección real
+                    }
+                });
+            });
+
+            // Limpiar todos los favoritos
+            clearFavoritesBtn.addEventListener('click', function () {
+                modalMessage.textContent = '¿Estás seguro de que quieres eliminar TODOS los favoritos? Esta acción no se puede deshacer.';
+                modal.style.display = 'flex';
+
+                window.pendingAction = 'clearAll';
+            });
+
+            // Batallar favoritos
+            battleFavoritesBtn.addEventListener('click', function () {
+                const cards = favoritesGrid.querySelectorAll('.favorite-card');
+                if (cards.length < 2) {
+                    alert('Necesitas al menos 2 Pokémon favoritos para batallar');
+                    return;
+                }
+
+                // Seleccionar dos Pokémon aleatorios
+                const randomCards = Array.from(cards)
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 2);
+
+                const pokemon1 = randomCards[0].querySelector('.favorite-name').textContent;
+                const pokemon2 = randomCards[1].querySelector('.favorite-name').textContent;
+
+                alert(`¡Batalla entre ${pokemon1} y ${pokemon2}! Redirigiendo a VS Battle...`);
+                // Aquí tus compañeros agregarán la redirección real
+            });
+
+            // Confirmar acción en modal
+            modalConfirmBtn.addEventListener('click', function () {
+                if (window.pendingDeleteCard) {
+                    // Eliminar tarjeta individual
+                    window.pendingDeleteCard.remove();
+                    window.pendingDeleteCard = null;
+                } else if (window.pendingAction === 'clearAll') {
+                    // Limpiar todos los favoritos
+                    document.querySelectorAll('.favorite-card').forEach(card => card.remove());
+                }
+
+                modal.style.display = 'none';
+                checkEmptyState();
+            });
+
+            // Cancelar acción en modal
+            modalCancelBtn.addEventListener('click', function () {
+                modal.style.display = 'none';
+                window.pendingDeleteCard = null;
+                window.pendingAction = null;
+            });
+
+            // Cerrar modal haciendo click fuera
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    window.pendingDeleteCard = null;
+                    window.pendingAction = null;
+                }
+            });
+
+            // Verificar estado inicial
+            checkEmptyState();
+        });
+    </script>
+</body>
+
+</html>

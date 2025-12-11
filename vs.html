@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéFinder - VS Battle</title>
+    <link rel="icon" href="logo.ico" type="image/x-icon">
+    <style>
+        /* ===== VARIABLES CSS (Mismas que index.html) ===== */
+        :root {
+            --color-bg: #f5e6d3;
+            --color-primary: #2d2d2d;
+            --color-accent: #ffcc00;
+            --color-secondary: #ff6b6b;
+            --color-success: #4ecdc4;
+            --color-error: #ff6b6b;
+            --color-warning: #ffa500;
+            --color-api: #4ecdc4;
+            --color-cache: #ffcc00;
+            --color-expired: #ffa500;
+            --border-width: 4px;
+            --border-color: #2d2d2d;
+            --shadow: 6px 6px 0px #2d2d2d;
+            --font-family: 'Courier New', monospace;
+            --transition: all 0.1s ease;
+        }
+
+        /* ===== RESET Y ESTILOS BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            font-family: var(--font-family);
+            color: var(--color-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* ===== NAVEGACIÓN ===== */
+        .nav {
+            background-color: var(--color-primary);
+            border-bottom: var(--border-width) solid var(--border-color);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-list {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid transparent;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            border-color: var(--color-accent);
+            transform: translate(-2px, -2px);
+        }
+
+        .nav-link.active {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        /* ===== TÍTULOS ===== */
+        h1,
+        h2,
+        h3 {
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin: 2rem 0 3rem;
+            padding: 1.5rem;
+            border: var(--border-width) solid var(--border-color);
+            background-color: var(--color-accent);
+            box-shadow: var(--shadow);
+            transform: rotate(-1deg);
+        }
+
+        /* ===== CONTROLES DE VS BATTLE ===== */
+        .vs-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* ===== BOTONES ===== */
+        .btn {
+            padding: 1rem 2rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+            font-size: 1rem;
+            border: var(--border-width) solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-secondary);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--color-error);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--color-success);
+            color: var(--color-primary);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translate(-3px, -3px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translate(0, 0);
+            box-shadow: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== CONTENEDOR PRINCIPAL VS ===== */
+        .vs-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 1024px) {
+            .vs-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 1rem;
+            }
+        }
+
+        /* ===== LADO POKÉMON ===== */
+        .vs-side {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .vs-search {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            border: var(--border-width) solid var(--border-color);
+            background-color: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--color-primary);
+        }
+
+        .vs-pokemon-container {
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* ===== CENTRO VS ===== */
+        .vs-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem;
+            height: 100%;
+        }
+
+        .vs-vs {
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--color-secondary);
+            text-shadow: 4px 4px 0px var(--color-primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* ===== TARJETA DE POKÉMON VS ===== */
+        .vs-card {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .vs-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid var(--color-primary);
+        }
+
+        .badge-api {
+            background-color: var(--color-api);
+            color: var(--color-primary);
+        }
+
+        .badge-cache {
+            background-color: var(--color-cache);
+            color: var(--color-primary);
+        }
+
+        .vs-favorite-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #ccc;
+            transition: var(--transition);
+            padding: 0.25rem;
+        }
+
+        .vs-favorite-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .vs-favorite-btn .fas.fa-heart.favorite {
+            color: var(--color-secondary);
+        }
+
+        /* ===== CONTENIDO DE LA TARJETA VS ===== */
+        .vs-card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .vs-sprite {
+            width: 150px;
+            height: 150px;
+            image-rendering: pixelated;
+            border: 3px solid var(--border-color);
+            background-color: #f0f0f0;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+        }
+
+        .vs-info {
+            width: 100%;
+        }
+
+        .vs-name {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            color: var(--color-primary);
+        }
+
+        .vs-id {
+            font-size: 1.5rem;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .vs-types {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== BADGE DE TIPO ===== */
+        .type-badge {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid var(--color-primary);
+        }
+
+        .type-normal {
+            background-color: #A8A878;
+            color: white;
+        }
+
+        .type-fire {
+            background-color: #F08030;
+            color: white;
+        }
+
+        .type-water {
+            background-color: #6890F0;
+            color: white;
+        }
+
+        .type-electric {
+            background-color: #F8D030;
+            color: black;
+        }
+
+        .type-grass {
+            background-color: #78C850;
+            color: white;
+        }
+
+        .type-ice {
+            background-color: #98D8D8;
+            color: black;
+        }
+
+        .type-fighting {
+            background-color: #C03028;
+            color: white;
+        }
+
+        .type-poison {
+            background-color: #A040A0;
+            color: white;
+        }
+
+        .type-ground {
+            background-color: #E0C068;
+            color: black;
+        }
+
+        .type-flying {
+            background-color: #A890F0;
+            color: white;
+        }
+
+        .type-psychic {
+            background-color: #F85888;
+            color: white;
+        }
+
+        .type-bug {
+            background-color: #A8B820;
+            color: white;
+        }
+
+        .type-rock {
+            background-color: #B8A038;
+            color: white;
+        }
+
+        .type-ghost {
+            background-color: #705898;
+            color: white;
+        }
+
+        .type-dragon {
+            background-color: #7038F8;
+            color: white;
+        }
+
+        .type-dark {
+            background-color: #705848;
+            color: white;
+        }
+
+        .type-steel {
+            background-color: #B8B8D0;
+            color: black;
+        }
+
+        .type-fairy {
+            background-color: #EE99AC;
+            color: black;
+        }
+
+        /* ===== ESTADÍSTICAS VS ===== */
+        .vs-stats {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .vs-stat-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .vs-stat-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .vs-stat-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #eee;
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        .vs-stat-bar {
+            height: 100%;
+            background-color: var(--color-accent);
+            transition: width 1s ease-out;
+        }
+
+        .vs-stat-number {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: var(--color-primary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== RESULTADOS DE BATALLA ===== */
+        .battle-results {
+            margin-top: 3rem;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-card {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* ===== GANADOR ===== */
+        .winner-section {
+            text-align: center;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: var(--border-width) solid var(--color-primary);
+            background-color: var(--color-accent);
+        }
+
+        .winner-section.tie {
+            background-color: var(--color-success);
+            color: white;
+        }
+
+        .winner-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .winner-name {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .winner-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* ===== COMPARACIÓN DE PUNTUACIONES ===== */
+        .score-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: center;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background-color: #f9f9f9;
+            border: 3px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .score-comparison {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+        }
+
+        .score-card {
+            text-align: center;
+            padding: 1.5rem;
+            border: 3px solid var(--border-color);
+            background-color: white;
+        }
+
+        .score-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--color-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .score-breakdown {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .score-breakdown div {
+            margin-bottom: 0.25rem;
+        }
+
+        .score-vs {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--color-primary);
+        }
+
+        /* ===== EFECTIVIDAD DE TIPOS ===== */
+        .effectiveness-section {
+            margin-top: 2rem;
+        }
+
+        .effectiveness-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .effectiveness-item {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .effectiveness-item.super {
+            background-color: rgba(78, 205, 196, 0.2);
+            border-color: var(--color-success);
+        }
+
+        .effectiveness-item.normal {
+            background-color: rgba(255, 204, 0, 0.2);
+            border-color: var(--color-accent);
+        }
+
+        .effectiveness-item.weak {
+            background-color: rgba(255, 107, 107, 0.2);
+            border-color: var(--color-error);
+        }
+
+        .effectiveness-multiplier {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* ===== ACCIONES POST-BATALLA ===== */
+        .post-battle-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        /* ===== ESTADOS ===== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .error {
+            background-color: var(--color-error);
+            color: white;
+            padding: 2rem;
+            border: var(--border-width) solid var(--color-primary);
+            text-align: center;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav-list {
+                gap: 1rem;
+            }
+
+            .nav-link {
+                font-size: 1rem;
+                padding: 0.5rem;
+            }
+
+            .vs-controls {
+                flex-direction: column;
+            }
+
+            .vs-controls .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .vs-card {
+                max-width: 100%;
+            }
+
+            .post-battle-actions {
+                flex-direction: column;
+            }
+
+            .post-battle-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVEGACIÓN -->
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="index.html" class="nav-link"><i class="fas fa-search"></i> Buscar</a></li>
+            <li><a href="historico.html" class="nav-link"><i class="fas fa-history"></i> Histórico</a></li>
+            <li><a href="favoritos.html" class="nav-link"><i class="fas fa-heart"></i> Favoritos</a></li>
+            <li><a href="vs.html" class="nav-link active"><i class="fas fa-fist-raised"></i> VS Battle</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- TÍTULO PRINCIPAL -->
+        <h1><i class="fas fa-fist-raised"></i> VS BATTLE</h1>
+
+        <!-- CONTROLES -->
+        <div class="vs-controls">
+            <button class="btn btn-primary" id="random-battle-btn">
+                <i class="fas fa-random"></i> BATALLA ALEATORIA
+            </button>
+            <button class="btn btn-secondary" id="clear-battle-btn">
+                <i class="fas fa-eraser"></i> LIMPIAR BATALLA
+            </button>
+        </div>
+
+        <!-- CONTENEDOR PRINCIPAL VS -->
+        <div class="vs-container">
+            <!-- LADO IZQUIERDO - POKÉMON 1 -->
+            <div class="vs-side">
+                <div class="vs-search">
+                    <div class="form-group">
+                        <label for="pokemon1-input" class="form-label">
+                            <i class="fas fa-user"></i> POKÉMON 1:
+                        </label>
+                        <input type="text" id="pokemon1-input" class="form-control" placeholder="Nombre o número..."
+                            autocomplete="off">
+                    </div>
+                    <button class="btn btn-primary" id="search-pokemon1-btn">
+                        <i class="fas fa-search"></i> BUSCAR
+                    </button>
+                </div>
+
+                <div class="vs-pokemon-container" id="pokemon1-container">
+                    <!-- Tarjeta de ejemplo para Pokémon 1 -->
+                    <div class="vs-card">
+                        <div class="vs-card-header">
+                            <span class="badge badge-api">DESDE API</span>
+                            <button class="vs-favorite-btn">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+
+                        <div class="vs-card-content">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+                                alt="Pikachu" class="vs-sprite">
+
+                            <div class="vs-info">
+                                <div class="vs-name">PIKACHU</div>
+                                <div class="vs-id">#025</div>
+
+                                <div class="vs-types">
+                                    <span class="type-badge type-electric">ELECTRIC</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vs-stats">
+                            <div class="vs-stat-item">
+                                <div class="vs-stat-label">
+                                    <span>HP</span>
+                                    <span>35</span>
+                                </div>
+                                <div class="vs-stat-bar-container">
+                                    <div class="vs-stat-bar" style="width: 35%"></div>
+                                    <span class="vs-stat-number">35</span>
+                                </div>
+                            </div>
+
+                            <div class="vs-stat-item">
+                                <div class="vs-stat-label">
+                                    <span>ATK</span>
+                                    <span>55</span>
+                                </div>
+                                <div class="vs-stat-bar-container">
+                                    <div class="vs-stat-bar" style="width: 55%"></div>
+                                    <span class="vs-stat-number">55</span>
+                                </div>
+                            </div>
+
+                            <div class="vs-stat-item">
+                                <div class="vs-stat-label">
+                                    <span>DEF</span>
+                                    <span>40</span>
+                                </div>
+                                <div class="vs-stat-bar-container">
+                                    <div class="vs-stat-bar" style="width: 40%"></div>
+                                    <span class="vs-stat-number">40</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTRO - VS -->
+            <div class="vs-center">
+                <div class="vs-vs">VS</div>
+                <button class="btn btn-danger" id="battle-btn" disabled>
+                    <i class="fas fa-fist-raised"></i> ¡BATALLAR!
+                </button>
+            </div>
+
+            <!-- LADO DERECHO - POKÉMON 2 -->
+            <div class="vs-side">
+                <div class="vs-search">
+                    <div class="form-group">
+                        <label for="pokemon2-input" class="form-label">
+                            <i class="fas fa-user"></i> POKÉMON 2:
+                        </label>
+                        <input type="text" id="pokemon2-input" class="form-control" placeholder="Nombre o número..."
+                            autocomplete="off">
+                    </div>
+                    <button class="btn btn-primary" id="search-pokemon2-btn">
+                        <i class="fas fa-search"></i> BUSCAR
+                    </button>
+                </div>
+
+                <div class="vs-pokemon-container" id="pokemon2-container">
+                    <!-- Tarjeta de ejemplo para Pokémon 2 -->
+                    <div class="vs-card">
+                        <div class="vs-card-header">
+                            <span class="badge badge-cache">DESDE CACHÉ</span>
+                            <button class="vs-favorite-btn">
+                                <i class="fas fa-heart favorite"></i>
+                            </button>
+                        </div>
+
+                        <div class="vs-card-content">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png"
+                                alt="Charizard" class="vs-sprite">
+
+                            <div class="vs-info">
+                                <div class="vs-name">CHARIZARD</div>
+                                <div class="vs-id">#006</div>
+
+                                <div class="vs-types">
+                                    <span class="type-badge type-fire">FIRE</span>
+                                    <span class="type-badge type-flying">FLYING</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vs-stats">
+                            <div class="vs-stat-item">
+                                <div class="vs-stat-label">
+                                    <span>HP</span>
+                                    <span>78</span>
+                                </div>
+                                <div class="vs-stat-bar-container">
+                                    <div class="vs-stat-bar" style="width: 78%"></div>
+                                    <span class="vs-stat-number">78</span>
+                                </div>
+                            </div>
+
+                            <div class="vs-stat-item">
+                                <div class="vs-stat-label">
+                                    <span>ATK</span>
+                                    <span>84</span>
+                                </div>
+                                <div class="vs-stat-bar-container">
+                                    <div class="vs-stat-bar" style="width: 84%"></div>
+                                    <span class="vs-stat-number">84</span>
+                                </div>
+                            </div>
+
+                            <div class="vs-stat-item">
+                                <div class="vs-stat-label">
+                                    <span>DEF</span>
+                                    <span>78</span>
+                                </div>
+                                <div class="vs-stat-bar-container">
+                                    <div class="vs-stat-bar" style="width: 78%"></div>
+                                    <span class="vs-stat-number">78</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADOS DE LA BATALLA -->
+        <div class="battle-results" id="battle-results" style="display: none;">
+            <div class="results-card">
+                <!-- Sección del ganador -->
+                <div class="winner-section">
+                    <div class="winner-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="winner-name">CHARIZARD</div>
+                    <div class="winner-score">Puntuación: 845.6</div>
+                    <p>¡Derrotó a Pikachu con ventaja de tipo!</p>
+                </div>
+
+                <!-- Comparación de puntuaciones -->
+                <div class="score-comparison">
+                    <div class="score-card">
+                        <div class="score-name">PIKACHU</div>
+                        <div class="score-value">320.0</div>
+                        <div class="score-breakdown">
+                            <div>Stats: 320.0</div>
+                            <div>× Efectividad: 1.0</div>
+                        </div>
+                    </div>
+
+                    <div class="score-vs">VS</div>
+
+                    <div class="score-card">
+                        <div class="score-name">CHARIZARD</div>
+                        <div class="score-value">845.6</div>
+                        <div class="score-breakdown">
+                            <div>Stats: 422.8</div>
+                            <div>× Efectividad: 2.0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Efectividad de tipos -->
+                <div class="effectiveness-section">
+                    <h3><i class="fas fa-balance-scale"></i> EFECTIVIDAD DE TIPOS</h3>
+                    <div class="effectiveness-grid">
+                        <div class="effectiveness-item super">
+                            <span>FIRE → ELECTRIC</span>
+                            <span class="effectiveness-multiplier">2.0×</span>
+                        </div>
+                        <div class="effectiveness-item normal">
+                            <span>ELECTRIC → FIRE</span>
+                            <span class="effectiveness-multiplier">1.0×</span>
+                        </div>
+                        <div class="effectiveness-item normal">
+                            <span>FLYING → ELECTRIC</span>
+                            <span class="effectiveness-multiplier">1.0×</span>
+                        </div>
+                        <div class="effectiveness-item weak">
+                            <span>ELECTRIC → FLYING</span>
+                            <span class="effectiveness-multiplier">0.5×</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones post-batalla -->
+                <div class="post-battle-actions">
+                    <button class="btn btn-primary" id="rematch-btn">
+                        <i class="fas fa-redo"></i> REVANCHA
+                    </button>
+                    <button class="btn btn-secondary" id="swap-btn">
+                        <i class="fas fa-exchange-alt"></i> INTERCAMBIAR
+                    </button>
+                    <button class="btn btn-success" id="save-battle-btn">
+                        <i class="fas fa-save"></i> GUARDAR BATALLA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- TEMPLATE: TARJETA VS VACÍA -->
+    <template id="empty-vs-template">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-question"></i>
+            </div>
+            <p>BUSCA UN POKÉMON PARA COMENZAR</p>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: TARJETA VS DE POKÉMON -->
+    <template id="vs-card-template">
+        <div class="vs-card">
+            <div class="vs-card-header">
+                <span class="badge badge-api">DESDE API</span>
+                <button class="vs-favorite-btn">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+
+            <div class="vs-card-content">
+                <img src="" alt="" class="vs-sprite">
+
+                <div class="vs-info">
+                    <div class="vs-name">NOMBRE</div>
+                    <div class="vs-id">#000</div>
+
+                    <div class="vs-types">
+                        <!-- Tipos se agregarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="vs-stats">
+                <!-- Estadísticas se agregarán dinámicamente -->
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: RESULTADO DE BATALLA -->
+    <template id="battle-results-template">
+        <div class="results-card">
+            <div class="winner-section">
+                <div class="winner-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="winner-name">GANADOR</div>
+                <div class="winner-score">Puntuación: 0.0</div>
+                <p>¡Descripción de la victoria!</p>
+            </div>
+
+            <div class="score-comparison">
+                <div class="score-card">
+                    <div class="score-name">POKÉMON 1</div>
+                    <div class="score-value">0.0</div>
+                    <div class="score-breakdown">
+                        <div>Stats: 0.0</div>
+                        <div>× Efectividad: 1.0</div>
+                    </div>
+                </div>
+
+                <div class="score-vs">VS</div>
+
+                <div class="score-card">
+                    <div class="score-name">POKÉMON 2</div>
+                    <div class="score-value">0.0</div>
+                    <div class="score-breakdown">
+                        <div>Stats: 0.0</div>
+                        <div>× Efectividad: 1.0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="effectiveness-section">
+                <h3><i class="fas fa-balance-scale"></i> EFECTIVIDAD DE TIPOS</h3>
+                <div class="effectiveness-grid">
+                    <!-- Efectividades se agregarán dinámicamente -->
+                </div>
+            </div>
+
+            <div class="post-battle-actions">
+                <button class="btn btn-primary" id="rematch-btn">
+                    <i class="fas fa-redo"></i> REVANCHA
+                </button>
+                <button class="btn btn-secondary" id="swap-btn">
+                    <i class="fas fa-exchange-alt"></i> INTERCAMBIAR
+                </button>
+                <button class="btn btn-success" id="save-battle-btn">
+                    <i class="fas fa-save"></i> GUARDAR BATALLA
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // JavaScript básico para la interfaz de VS Battle
+        document.addEventListener('DOMContentLoaded', function () {
+            // Elementos principales
+            const pokemon1Input = document.getElementById('pokemon1-input');
+            const pokemon2Input = document.getElementById('pokemon2-input');
+            const searchPokemon1Btn = document.getElementById('search-pokemon1-btn');
+            const searchPokemon2Btn = document.getElementById('search-pokemon2-btn');
+            const battleBtn = document.getElementById('battle-btn');
+            const randomBattleBtn = document.getElementById('random-battle-btn');
+            const clearBattleBtn = document.getElementById('clear-battle-btn');
+            const battleResults = document.getElementById('battle-results');
+            const pokemon1Container = document.getElementById('pokemon1-container');
+            const pokemon2Container = document.getElementById('pokemon2-container');
+
+            // Estado de la batalla
+            let pokemon1Loaded = true; // Cambiar a false cuando se implemente la lógica real
+            let pokemon2Loaded = true; // Cambiar a false cuando se implemente la lógica real
+
+            // Actualizar estado del botón de batalla
+            function updateBattleButton() {
+                battleBtn.disabled = !(pokemon1Loaded && pokemon2Loaded);
+            }
+
+            // Simular búsqueda de Pokémon 1
+            searchPokemon1Btn.addEventListener('click', function () {
+                const query = pokemon1Input.value.trim();
+                if (!query) {
+                    alert('Ingresa un nombre o número de Pokémon');
+                    return;
+                }
+
+                // Mostrar loading (simulado)
+                pokemon1Container.innerHTML = '<div class="loading">BUSCANDO POKÉMON...</div>';
+
+                // Simular delay de búsqueda
+                setTimeout(() => {
+                    // Aquí tus compañeros agregarán la lógica real
+                    pokemon1Loaded = true;
+                    updateBattleButton();
+                    alert(`Pokémon 1 buscado: ${query}`);
+                }, 500);
+            });
+
+            // Simular búsqueda de Pokémon 2
+            searchPokemon2Btn.addEventListener('click', function () {
+                const query = pokemon2Input.value.trim();
+                if (!query) {
+                    alert('Ingresa un nombre o número de Pokémon');
+                    return;
+                }
+
+                // Mostrar loading (simulado)
+                pokemon2Container.innerHTML = '<div class="loading">BUSCANDO POKÉMON...</div>';
+
+                // Simular delay de búsqueda
+                setTimeout(() => {
+                    // Aquí tus compañeros agregarán la lógica real
+                    pokemon2Loaded = true;
+                    updateBattleButton();
+                    alert(`Pokémon 2 buscado: ${query}`);
+                }, 500);
+            });
+
+            // Iniciar batalla
+            battleBtn.addEventListener('click', function () {
+                if (!pokemon1Loaded || !pokemon2Loaded) {
+                    alert('Debes cargar ambos Pokémon primero');
+                    return;
+                }
+
+                // Mostrar resultados
+                battleResults.style.display = 'block';
+                battleResults.scrollIntoView({ behavior: 'smooth' });
+
+                // Aquí tus compañeros agregarán la lógica real de batalla
+                console.log('¡Batalla iniciada!');
+            });
+
+            // Batalla aleatoria
+            randomBattleBtn.addEventListener('click', function () {
+                const randomPokemon = [
+                    'pikachu', 'charizard', 'blastoise', 'venusaur',
+                    'mewtwo', 'gyarados', 'dragonite', 'snorlax',
+                    'gengar', 'alakazam', 'machamp', 'tyranitar'
+                ];
+
+                const random1 = randomPokemon[Math.floor(Math.random() * randomPokemon.length)];
+                const random2 = randomPokemon[Math.floor(Math.random() * randomPokemon.length)];
+
+                pokemon1Input.value = random1;
+                pokemon2Input.value = random2;
+
+                // Simular búsqueda automática
+                searchPokemon1Btn.click();
+                setTimeout(() => searchPokemon2Btn.click(), 300);
+            });
+
+            // Limpiar batalla
+            clearBattleBtn.addEventListener('click', function () {
+                if (confirm('¿Limpiar toda la batalla?')) {
+                    pokemon1Input.value = '';
+                    pokemon2Input.value = '';
+                    pokemon1Loaded = false;
+                    pokemon2Loaded = false;
+                    battleResults.style.display = 'none';
+                    updateBattleButton();
+
+                    // Restaurar tarjetas de ejemplo
+                    // (En la implementación real, esto se manejará diferente)
+                }
+            });
+
+            // Botones de favoritos en las tarjetas
+            document.querySelectorAll('.vs-favorite-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('favorite');
+
+                    if (icon.classList.contains('favorite')) {
+                        alert('Agregado a favoritos');
+                    } else {
+                        alert('Eliminado de favoritos');
+                    }
+                });
+            });
+
+            // Acciones post-batalla
+            document.getElementById('rematch-btn')?.addEventListener('click', function () {
+                battleBtn.click(); // Revancha
+            });
+
+            document.getElementById('swap-btn')?.addEventListener('click', function () {
+                // Intercambiar Pokémon
+                const temp = pokemon1Input.value;
+                pokemon1Input.value = pokemon2Input.value;
+                pokemon2Input.value = temp;
+
+                // Simular nueva búsqueda
+                searchPokemon1Btn.click();
+                setTimeout(() => searchPokemon2Btn.click(), 300);
+            });
+
+            document.getElementById('save-battle-btn')?.addEventListener('click', function () {
+                alert('Batalla guardada (esta función se implementará completamente)');
+            });
+
+            // Permitir Enter en los inputs
+            pokemon1Input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') searchPokemon1Btn.click();
+            });
+
+            pokemon2Input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') searchPokemon2Btn.click();
+            });
+
+            // Estado inicial
+            updateBattleButton();
+        });
+    </script>
+</body>
+
+</html>

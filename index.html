@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéFinder - Buscador de Pokémon</title>
+    <link rel="icon" href="logo.ico" type="image/x-icon">
+    <style>
+        /* ===== VARIABLES CSS ===== */
+        :root {
+            --color-bg: #f5e6d3;
+            --color-primary: #2d2d2d;
+            --color-accent: #ffcc00;
+            --color-secondary: #ff6b6b;
+            --color-success: #4ecdc4;
+            --color-error: #ff6b6b;
+            --color-warning: #ffa500;
+            --color-api: #4ecdc4;
+            --color-cache: #ffcc00;
+            --color-expired: #ffa500;
+            --border-width: 4px;
+            --border-color: #2d2d2d;
+            --shadow: 6px 6px 0px #2d2d2d;
+            --font-family: 'Courier New', monospace;
+            --transition: all 0.1s ease;
+        }
+
+        /* ===== RESET Y ESTILOS BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            font-family: var(--font-family);
+            color: var(--color-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* ===== NAVEGACIÓN ===== */
+        .nav {
+            background-color: var(--color-primary);
+            border-bottom: var(--border-width) solid var(--border-color);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-list {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid transparent;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link:hover {
+            border-color: var(--color-accent);
+            transform: translate(-2px, -2px);
+        }
+
+        .nav-link.active {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        /* ===== TÍTULOS ===== */
+        h1,
+        h2,
+        h3 {
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            font-weight: 900;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-align: center;
+            margin: 2rem 0 3rem;
+            padding: 1.5rem;
+            border: var(--border-width) solid var(--border-color);
+            background-color: var(--color-accent);
+            box-shadow: var(--shadow);
+            transform: rotate(-1deg);
+        }
+
+        /* ===== SELECTOR DE BÚSQUEDA ===== */
+        .search-type-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .search-type-btn {
+            padding: 1rem 2rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: var(--border-width) solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-type-btn.active {
+            background-color: var(--color-accent);
+            transform: translate(-3px, -3px);
+            box-shadow: var(--shadow);
+        }
+
+        .search-type-btn:hover:not(.active) {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--color-primary);
+        }
+
+        /* ===== SECCIONES DE BÚSQUEDA ===== */
+        .search-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .search-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== FORMULARIOS ===== */
+        .search-form {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            border: var(--border-width) solid var(--border-color);
+            background-color: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--color-primary);
+        }
+
+        /* ===== BOTONES ===== */
+        .btn {
+            padding: 1rem 2rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+            font-size: 1rem;
+            border: var(--border-width) solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-secondary);
+            color: white;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translate(-3px, -3px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translate(0, 0);
+            box-shadow: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== TARJETA DE POKÉMON ===== */
+        .pokemon-card {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid var(--color-primary);
+        }
+
+        .badge-api {
+            background-color: var(--color-api);
+            color: var(--color-primary);
+        }
+
+        .badge-cache {
+            background-color: var(--color-cache);
+            color: var(--color-primary);
+        }
+
+        .badge-expired {
+            background-color: var(--color-expired);
+            color: var(--color-primary);
+        }
+
+        .favorite-btn {
+            background-color: transparent;
+            border: 2px solid var(--color-secondary);
+            color: var(--color-secondary);
+            padding: 0.5rem 1rem;
+        }
+
+        .favorite-btn .fas.fa-heart {
+            color: #ccc;
+        }
+
+        .favorite-btn .fas.fa-heart.favorite {
+            color: var(--color-secondary);
+        }
+
+        /* ===== INFO PRINCIPAL DEL POKÉMON ===== */
+        .pokemon-main {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .pokemon-main {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        .pokemon-image {
+            border: var(--border-width) solid var(--border-color);
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pokemon-sprite {
+            width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.2));
+        }
+
+        .pokemon-basic-info h2 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .pokemon-id {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        /* ===== TIPOS DE POKÉMON ===== */
+        .pokemon-types {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .type-badge {
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            border: 2px solid var(--color-primary);
+        }
+
+        .type-normal {
+            background-color: #A8A878;
+            color: white;
+        }
+
+        .type-fire {
+            background-color: #F08030;
+            color: white;
+        }
+
+        .type-water {
+            background-color: #6890F0;
+            color: white;
+        }
+
+        .type-electric {
+            background-color: #F8D030;
+            color: black;
+        }
+
+        .type-grass {
+            background-color: #78C850;
+            color: white;
+        }
+
+        .type-ice {
+            background-color: #98D8D8;
+            color: black;
+        }
+
+        .type-fighting {
+            background-color: #C03028;
+            color: white;
+        }
+
+        .type-poison {
+            background-color: #A040A0;
+            color: white;
+        }
+
+        .type-ground {
+            background-color: #E0C068;
+            color: black;
+        }
+
+        .type-flying {
+            background-color: #A890F0;
+            color: white;
+        }
+
+        .type-psychic {
+            background-color: #F85888;
+            color: white;
+        }
+
+        .type-bug {
+            background-color: #A8B820;
+            color: white;
+        }
+
+        .type-rock {
+            background-color: #B8A038;
+            color: white;
+        }
+
+        .type-ghost {
+            background-color: #705898;
+            color: white;
+        }
+
+        .type-dragon {
+            background-color: #7038F8;
+            color: white;
+        }
+
+        .type-dark {
+            background-color: #705848;
+            color: white;
+        }
+
+        .type-steel {
+            background-color: #B8B8D0;
+            color: black;
+        }
+
+        .type-fairy {
+            background-color: #EE99AC;
+            color: black;
+        }
+
+        /* ===== ESTADÍSTICAS ===== */
+        .pokemon-stats {
+            margin-top: 2rem;
+        }
+
+        .pokemon-stats h3 {
+            font-size: 1.5rem;
+            border-bottom: 3px solid var(--color-primary);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .stat-bar-container {
+            width: 100%;
+            height: 25px;
+            background-color: #eee;
+            border: 2px solid var(--color-primary);
+            position: relative;
+        }
+
+        .stat-bar {
+            height: 100%;
+            background-color: var(--color-accent);
+            transition: width 1s ease-out;
+        }
+
+        .stat-number {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        /* ===== HABILIDADES ===== */
+        .pokemon-abilities {
+            margin: 1.5rem 0;
+        }
+
+        .ability-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            background-color: var(--color-primary);
+            color: white;
+            border-radius: 2px;
+            font-size: 0.9rem;
+        }
+
+        /* ===== BOTONES DE ACCIÓN ===== */
+        .pokemon-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        /* ===== TARJETA DE HABILIDAD ===== */
+        .ability-card {
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+        }
+
+        .ability-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .ability-description {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background-color: #f9f9f9;
+            border-left: 6px solid var(--color-accent);
+        }
+
+        .ability-pokemon {
+            margin-top: 2rem;
+        }
+
+        .pokemon-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .pokemon-from-ability {
+            padding: 0.5rem 1rem;
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-weight: bold;
+            transition: var(--transition);
+        }
+
+        .pokemon-from-ability:hover {
+            background-color: var(--color-accent);
+            color: var(--color-primary);
+            transform: translate(-2px, -2px);
+        }
+
+        /* ===== ESTADOS ===== */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .error {
+            background-color: var(--color-error);
+            color: white;
+            padding: 2rem;
+            border: var(--border-width) solid var(--color-primary);
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .error i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* ===== CADENA EVOLUTIVA ===== */
+        .evolution-chain {
+            margin-top: 2rem;
+            padding: 2rem;
+            background-color: white;
+            border: var(--border-width) solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .evolution-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .evolution-stages {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .evolution-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .evolution-pokemon {
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid var(--border-color);
+            padding: 1rem;
+            background-color: white;
+            margin-bottom: 1rem;
+        }
+
+        .evolution-pokemon:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 4px 4px 0px var(--color-primary);
+        }
+
+        .evolution-sprite {
+            width: 80px;
+            height: 80px;
+            image-rendering: pixelated;
+        }
+
+        .evolution-arrow {
+            font-size: 2rem;
+            color: var(--color-primary);
+            font-weight: bold;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav-list {
+                gap: 1rem;
+            }
+
+            .nav-link {
+                font-size: 1rem;
+                padding: 0.5rem;
+            }
+
+            .search-type-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .pokemon-main {
+                grid-template-columns: 1fr;
+            }
+
+            .evolution-stages {
+                flex-direction: column;
+            }
+
+            .evolution-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* ===== ESTILOS ESPECÍFICOS ===== */
+        .mt-2 {
+            margin-top: 2rem;
+        }
+
+        .mt-3 {
+            margin-top: 3rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 2rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVEGACIÓN -->
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="index.html" class="nav-link active"><i class="fas fa-search"></i> Buscar</a></li>
+            <li><a href="historico.html" class="nav-link"><i class="fas fa-history"></i> Histórico</a></li>
+            <li><a href="favoritos.html" class="nav-link"><i class="fas fa-heart"></i> Favoritos</a></li>
+            <li><a href="vs.html" class="nav-link"><i class="fas fa-fist-raised"></i> VS Battle</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <!-- TÍTULO PRINCIPAL -->
+        <h1><i class="fas fa-search"></i> POKÉFINDER</h1>
+
+        <!-- SELECTOR DE TIPO DE BÚSQUEDA -->
+        <div class="search-type-selector">
+            <button class="search-type-btn active" data-type="pokemon">
+                <i class="fas fa-paw"></i> Buscar Pokémon
+            </button>
+            <button class="search-type-btn" data-type="ability">
+                <i class="fas fa-bolt"></i> Buscar Habilidad
+            </button>
+        </div>
+
+        <!-- SECCIÓN DE BÚSQUEDA DE POKÉMON -->
+        <section id="pokemon-search-section" class="search-section active">
+            <form class="search-form" id="pokemon-search-form">
+                <div class="form-group">
+                    <label for="pokemon-input" class="form-label">
+                        <i class="fas fa-search"></i> NOMBRE O NÚMERO DEL POKÉMON:
+                    </label>
+                    <input type="text" id="pokemon-input" class="form-control"
+                        placeholder="Ej: pikachu, 25, charizard..." autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> BUSCAR POKÉMON
+                </button>
+            </form>
+
+            <!-- RESULTADOS DE POKÉMON -->
+            <div id="pokemon-results">
+                <!-- Aquí se cargarán los resultados -->
+                <div class="loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> BUSCANDO POKÉMON...
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE BÚSQUEDA DE HABILIDAD -->
+        <section id="ability-search-section" class="search-section">
+            <form class="search-form" id="ability-search-form">
+                <div class="form-group">
+                    <label for="ability-input" class="form-label">
+                        <i class="fas fa-bolt"></i> NOMBRE DE LA HABILIDAD:
+                    </label>
+                    <input type="text" id="ability-input" class="form-control"
+                        placeholder="Ej: static, blaze, overgrow..." autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-bolt"></i> BUSCAR HABILIDAD
+                </button>
+            </form>
+
+            <!-- RESULTADOS DE HABILIDAD -->
+            <div id="ability-results">
+                <!-- Aquí se cargarán los resultados -->
+                <div class="loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> BUSCANDO HABILIDAD...
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- TEMPLATE: TARJETA DE POKÉMON (Para que JavaScript clone) -->
+    <template id="pokemon-card-template">
+        <div class="pokemon-card fade-in">
+            <div class="card-header">
+                <span class="badge badge-api">DESDE API</span>
+                <button class="btn favorite-btn">
+                    <i class="fas fa-heart"></i> AGREGAR A FAVORITOS
+                </button>
+            </div>
+
+            <div class="pokemon-main">
+                <div class="pokemon-image">
+                    <img src="" alt="Pokémon" class="pokemon-sprite">
+                </div>
+
+                <div class="pokemon-basic-info">
+                    <h2>PIKACHU</h2>
+                    <div class="pokemon-id">#025</div>
+
+                    <div class="pokemon-types">
+                        <span class="type-badge type-electric">ELECTRIC</span>
+                    </div>
+
+                    <div class="pokemon-abilities">
+                        <strong>Habilidades:</strong>
+                        <span class="ability-badge">STATIC</span>
+                        <span class="ability-badge">LIGHTNING-ROD</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pokemon-stats">
+                <h3><i class="fas fa-chart-bar"></i> ESTADÍSTICAS</h3>
+
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>HP</span>
+                        <span>35</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 35%"></div>
+                        <span class="stat-number">35</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>ATTACK</span>
+                        <span>55</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 55%"></div>
+                        <span class="stat-number">55</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>DEFENSE</span>
+                        <span>40</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 40%"></div>
+                        <span class="stat-number">40</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>SP. ATTACK</span>
+                        <span>50</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 50%"></div>
+                        <span class="stat-number">50</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>SP. DEFENSE</span>
+                        <span>50</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 50%"></div>
+                        <span class="stat-number">50</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>SPEED</span>
+                        <span>90</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: 90%"></div>
+                        <span class="stat-number">90</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pokemon-actions">
+                <button class="btn btn-secondary view-evolution-btn">
+                    <i class="fas fa-link"></i> VER CADENA EVOLUTIVA
+                </button>
+            </div>
+        </div>
+
+        <!-- CADENA EVOLUTIVA (se cargará dinámicamente) -->
+        <div class="evolution-chain" style="display: none;">
+            <h3 class="evolution-title"><i class="fas fa-link"></i> CADENA EVOLUTIVA</h3>
+            <div class="evolution-stages">
+                <!-- Las etapas evolutivas se cargarán aquí -->
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: TARJETA DE HABILIDAD -->
+    <template id="ability-card-template">
+        <div class="ability-card fade-in">
+            <div class="ability-header">
+                <h2><i class="fas fa-bolt"></i> STATIC</h2>
+                <span class="badge badge-api">DESDE API</span>
+            </div>
+
+            <div class="ability-description">
+                <h3>DESCRIPCIÓN</h3>
+                <p>Cuando un Pokémon con esta habilidad es golpeado por un movimiento de contacto, el atacante puede
+                    quedar paralizado.</p>
+            </div>
+
+            <div class="ability-pokemon">
+                <h3>POKÉMON CON ESTA HABILIDAD</h3>
+                <div class="pokemon-list">
+                    <button class="pokemon-from-ability">PIKACHU</button>
+                    <button class="pokemon-from-ability">RAICHU</button>
+                    <button class="pokemon-from-ability">ELECTABUZZ</button>
+                    <!-- Más Pokémon se cargarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: ETAPA EVOLUTIVA -->
+    <template id="evolution-stage-template">
+        <div class="evolution-stage">
+            <button class="evolution-pokemon" data-name="">
+                <img src="" alt="" class="evolution-sprite">
+                <div>PIKACHU</div>
+                <div>#025</div>
+            </button>
+            <div class="evolution-arrow" style="display: none;">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: MENSAJE DE ERROR -->
+    <template id="error-template">
+        <div class="error fade-in">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>¡POKÉMON NO ENCONTRADO!</h3>
+            <p>No se encontró ningún Pokémon con ese nombre o número.</p>
+            <p>Intenta con otro nombre o verifica la ortografía.</p>
+        </div>
+    </template>
+
+    <!-- TEMPLATE: MENSAJE DE ERROR DE HABILIDAD -->
+    <template id="ability-error-template">
+        <div class="error fade-in">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>¡HABILIDAD NO ENCONTRADA!</h3>
+            <p>No se encontró ninguna habilidad con ese nombre.</p>
+            <p>Intenta con otro nombre o verifica la ortografía.</p>
+        </div>
+    </template>
+
+    <script>
+        // JavaScript básico solo para la interfaz (sin lógica de negocio)
+        document.addEventListener('DOMContentLoaded', function () {
+            // Cambiar entre búsqueda de Pokémon y Habilidad
+            const searchTypeBtns = document.querySelectorAll('.search-type-btn');
+            const searchSections = document.querySelectorAll('.search-section');
+
+            searchTypeBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const type = this.dataset.type;
+
+                    // Actualizar botones activos
+                    searchTypeBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Mostrar sección correspondiente
+                    searchSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === `${type}-search-section`) {
+                            section.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Simular búsqueda (para demostración visual)
+            const searchForms = document.querySelectorAll('.search-form');
+            searchForms.forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    // Aquí tus compañeros agregarán la lógica real
+                    console.log('Búsqueda enviada');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
