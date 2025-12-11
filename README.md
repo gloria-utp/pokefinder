@@ -93,12 +93,12 @@ Habilidades desarrolladas:
 ## 📂 Estructura del Proyecto
 
 📁 pokefinder/
-├── index.html // Búsqueda
-├── historico.html // Histórico
-├── favoritos.html // Favoritos
-├── vs.html // Comparador VS
-├── shared.css // Estilos globales
-└── shared.js // Módulo de almacenamiento/cache
+- ├── index.html // Búsqueda
+- ├── historico.html // Histórico
+- ├── favoritos.html // Favoritos
+- ├── vs.html // Comparador VS
+- ├── shared.css // Estilos globales
+- └── shared.js // Módulo de almacenamiento/cache
 
 
 ---
