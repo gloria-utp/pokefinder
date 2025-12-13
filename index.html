@@ -718,7 +718,29 @@
         .fade-in {
             animation: fadeIn 0.3s ease-out;
         }
+
+
+
+        /* Agregados*/
+        .search-type-select {
+            padding: 1rem 2rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: var(--border-width) solid var(--border-color);
+            background-color: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .search-type-select:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--color-primary);
+        }
     </style>
+    <link rel="stylesheet" href="shared.css">
 </head>
 
 <body>
@@ -737,23 +759,29 @@
         <h1><i class="fas fa-search"></i> POKÉFINDER</h1>
 
         <!-- SELECTOR DE TIPO DE BÚSQUEDA -->
-        <div class="search-type-selector">
+        <!-- <div class="search-type-selector">
             <button class="search-type-btn active" data-type="pokemon">
                 <i class="fas fa-paw"></i> Buscar Pokémon
             </button>
             <button class="search-type-btn" data-type="ability">
                 <i class="fas fa-bolt"></i> Buscar Habilidad
             </button>
+        </div> -->
+        <div class="search-type-selector">
+            <select id="search-type-select" class="search-type-select">
+                <option value="pokemon">Buscar Pokémon</option>
+                <option value="ability">Buscar Habilidad</option>
+            </select>
         </div>
 
         <!-- SECCIÓN DE BÚSQUEDA DE POKÉMON -->
         <section id="pokemon-search-section" class="search-section active">
-            <form class="search-form" id="pokemon-search-form">
+            <form class="search-form" id="formulario-busqueda">
                 <div class="form-group">
                     <label for="pokemon-input" class="form-label">
                         <i class="fas fa-search"></i> NOMBRE O NÚMERO DEL POKÉMON:
                     </label>
-                    <input type="text" id="pokemon-input" class="form-control"
+                    <input type="text" id="entrada-pokemon" class="form-control"
                         placeholder="Ej: pikachu, 25, charizard..." autocomplete="off">
                 </div>
                 <button type="submit" class="btn btn-primary">
@@ -762,7 +790,7 @@
             </form>
 
             <!-- RESULTADOS DE POKÉMON -->
-            <div id="pokemon-results">
+            <div id="contenedor-resultados">
                 <!-- Aquí se cargarán los resultados -->
                 <div class="loading" style="display: none;">
                     <i class="fas fa-spinner fa-spin"></i> BUSCANDO POKÉMON...
@@ -771,7 +799,7 @@
         </section>
 
         <!-- SECCIÓN DE BÚSQUEDA DE HABILIDAD -->
-        <section id="ability-search-section" class="search-section">
+        <!-- <section id="ability-search-section" class="search-section">
             <form class="search-form" id="ability-search-form">
                 <div class="form-group">
                     <label for="ability-input" class="form-label">
@@ -783,16 +811,16 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-bolt"></i> BUSCAR HABILIDAD
                 </button>
-            </form>
+            </form> -->
 
             <!-- RESULTADOS DE HABILIDAD -->
-            <div id="ability-results">
+            <!-- <div id="ability-results"> -->
                 <!-- Aquí se cargarán los resultados -->
-                <div class="loading" style="display: none;">
+                <!-- <div class="loading" style="display: none;">
                     <i class="fas fa-spinner fa-spin"></i> BUSCANDO HABILIDAD...
                 </div>
             </div>
-        </section>
+        </section> -->
     </main>
 
     <!-- TEMPLATE: TARJETA DE POKÉMON (Para que JavaScript clone) -->
@@ -1008,6 +1036,7 @@
             });
         });
     </script>
+    <script src="shared.js"></script>
 </body>
 
 </html>
