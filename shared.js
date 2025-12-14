@@ -228,7 +228,20 @@
                     // Si no está en cache, busca en API
                     const url = `https://pokeapi.co/api/v2/pokemon/${queryStr.toLowerCase()}`;
                     const data = await this.fetchWithTimeout(url);
-                    return { ...data, fromCache: false };
+
+                    // Guarda también en caché para futuras búsquedas (VS y buscador)
+                    const cacheData = {
+                        id: data.id,
+                        name: data.name,
+                        sprites: data.sprites,
+                        types: data.types,
+                        abilities: data.abilities,
+                        stats: data.stats,
+                        cachedAt: new Date().toISOString()
+                    };
+                    Storage.saveToCache(cacheData);
+
+                    return { ...cacheData, fromCache: false };
                 } catch (error) {
                     console.error('Error en fetchPokemon:', error);
                     throw error;
@@ -982,6 +995,100 @@
             `
         };
 
+        // Tabla simplificada de efectividad de tipos
+        const typeChart = {
+            normal: {
+                superEffective: [],
+                notVeryEffective: ['rock', 'steel'],
+                noEffect: ['ghost']
+            },
+            fire: {
+                superEffective: ['grass', 'ice', 'bug', 'steel'],
+                notVeryEffective: ['fire', 'water', 'rock', 'dragon'],
+                noEffect: []
+            },
+            water: {
+                superEffective: ['fire', 'ground', 'rock'],
+                notVeryEffective: ['water', 'grass', 'dragon'],
+                noEffect: []
+            },
+            grass: {
+                superEffective: ['water', 'ground', 'rock'],
+                notVeryEffective: ['fire', 'grass', 'poison', 'flying', 'bug', 'dragon', 'steel'],
+                noEffect: []
+            },
+            electric: {
+                superEffective: ['water', 'flying'],
+                notVeryEffective: ['electric', 'grass', 'dragon'],
+                noEffect: ['ground']
+            },
+            ice: {
+                superEffective: ['grass', 'ground', 'flying', 'dragon'],
+                notVeryEffective: ['fire', 'water', 'ice', 'steel'],
+                noEffect: []
+            },
+            fighting: {
+                superEffective: ['normal', 'ice', 'rock', 'dark', 'steel'],
+                notVeryEffective: ['poison', 'flying', 'psychic', 'bug', 'fairy'],
+                noEffect: ['ghost']
+            },
+            poison: {
+                superEffective: ['grass', 'fairy'],
+                notVeryEffective: ['poison', 'ground', 'rock', 'ghost'],
+                noEffect: ['steel']
+            },
+            ground: {
+                superEffective: ['fire', 'electric', 'poison', 'rock', 'steel'],
+                notVeryEffective: ['grass', 'bug'],
+                noEffect: ['flying']
+            },
+            flying: {
+                superEffective: ['grass', 'fighting', 'bug'],
+                notVeryEffective: ['electric', 'rock', 'steel'],
+                noEffect: []
+            },
+            psychic: {
+                superEffective: ['fighting', 'poison'],
+                notVeryEffective: ['psychic', 'steel'],
+                noEffect: ['dark']
+            },
+            bug: {
+                superEffective: ['grass', 'psychic', 'dark'],
+                notVeryEffective: ['fire', 'fighting', 'poison', 'flying', 'ghost', 'steel', 'fairy'],
+                noEffect: []
+            },
+            rock: {
+                superEffective: ['fire', 'ice', 'flying', 'bug'],
+                notVeryEffective: ['fighting', 'ground', 'steel'],
+                noEffect: []
+            },
+            ghost: {
+                superEffective: ['psychic', 'ghost'],
+                notVeryEffective: ['dark'],
+                noEffect: ['normal']
+            },
+            dragon: {
+                superEffective: ['dragon'],
+                notVeryEffective: ['steel'],
+                noEffect: ['fairy']
+            },
+            dark: {
+                superEffective: ['psychic', 'ghost'],
+                notVeryEffective: ['fighting', 'dark', 'fairy'],
+                noEffect: []
+            },
+            steel: {
+                superEffective: ['ice', 'rock', 'fairy'],
+                notVeryEffective: ['fire', 'water', 'electric', 'steel'],
+                noEffect: []
+            },
+            fairy: {
+                superEffective: ['fighting', 'dragon', 'dark'],
+                notVeryEffective: ['fire', 'poison', 'steel'],
+                noEffect: []
+            }
+        };
+
         // 5. Manejadores de Eventos
         const handlers = {
             // Busca página
@@ -1236,6 +1343,472 @@
                         this.handleFavoritesButtonAction(e.currentTarget);
                     });
                 });
+            },
+
+            // VS batalla - Búsqueda v1
+            vsState: {
+                pokemon1: null,
+                pokemon2: null
+            },
+
+            initVsPage() {
+                const pokemon1Input = document.getElementById('pokemon1-input');
+                const pokemon2Input = document.getElementById('pokemon2-input');
+                const searchPokemon1Btn = document.getElementById('search-pokemon1-btn');
+                const searchPokemon2Btn = document.getElementById('search-pokemon2-btn');
+                const battleBtn = document.getElementById('battle-btn');
+                const randomBattleBtn = document.getElementById('random-battle-btn');
+                const clearBattleBtn = document.getElementById('clear-battle-btn');
+                const battleResults = document.getElementById('battle-results');
+                const pokemon1Container = document.getElementById('pokemon1-container');
+                const pokemon2Container = document.getElementById('pokemon2-container');
+
+                if (!pokemon1Input || !pokemon2Input || !searchPokemon1Btn || !searchPokemon2Btn || !pokemon1Container || !pokemon2Container) {
+                    return;
+                }
+
+                if (battleResults) {
+                    battleResults.style.display = 'none';
+                }
+
+                // Reemplaza las tarjetas de ejemplo por el estado vacío
+                this.renderEmptyVsCard(pokemon1Container, 'POKÉMON 1');
+                this.renderEmptyVsCard(pokemon2Container, 'POKÉMON 2');
+
+                // Buscar Pokémon 1
+                searchPokemon1Btn.addEventListener('click', () => {
+                    this.searchVsPokemon(1);
+                });
+
+                // Buscar Pokémon 2
+                searchPokemon2Btn.addEventListener('click', () => {
+                    this.searchVsPokemon(2);
+                });
+
+                // Enter en inputs
+                pokemon1Input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.searchVsPokemon(1);
+                    }
+                });
+
+                pokemon2Input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.searchVsPokemon(2);
+                    }
+                });
+
+                // Batalla aleatoria sencilla
+                if (randomBattleBtn) {
+                    randomBattleBtn.addEventListener('click', () => {
+                        const maxId = 151; 
+                        const randomId1 = Math.floor(Math.random() * maxId) + 1;
+                        const randomId2 = Math.floor(Math.random() * maxId) + 1;
+
+                        pokemon1Input.value = randomId1;
+                        pokemon2Input.value = randomId2;
+
+                        this.searchVsPokemon(1);
+                        this.searchVsPokemon(2);
+                    });
+                }
+
+                // Limpiar batalla
+                if (clearBattleBtn) {
+                    clearBattleBtn.addEventListener('click', () => {
+                        pokemon1Input.value = '';
+                        pokemon2Input.value = '';
+                        this.vsState.pokemon1 = null;
+                        this.vsState.pokemon2 = null;
+                        this.renderEmptyVsCard(pokemon1Container, 'POKÉMON 1');
+                        this.renderEmptyVsCard(pokemon2Container, 'POKÉMON 2');
+                        if (battleResults) {
+                            battleResults.style.display = 'none';
+                        }
+                        if (battleBtn) {
+                            battleBtn.disabled = true;
+                        }
+                    });
+                }
+
+                if (battleBtn) {
+                    battleBtn.disabled = true;
+                    battleBtn.addEventListener('click', () => {
+                        if (!this.vsState.pokemon1 || !this.vsState.pokemon2) {
+                            alert('Primero busca los dos Pokémon');
+                            return;
+                        }
+                        this.renderBattleResults();
+                    });
+                }
+            },
+
+            updateBattleButton() {
+                const battleBtn = document.getElementById('battle-btn');
+                if (!battleBtn) return;
+                battleBtn.disabled = !(this.vsState.pokemon1 && this.vsState.pokemon2);
+            },
+
+            renderEmptyVsCard(container, title) {
+                const template = document.getElementById('empty-vs-template');
+                if (!template || !container) return;
+
+                const fragment = template.content.cloneNode(true);
+                const titleElement = fragment.querySelector('p');
+                if (titleElement) {
+                    titleElement.textContent = `BUSCA ${title}`;
+                }
+
+                container.innerHTML = '';
+                container.appendChild(fragment);
+            },
+
+            async searchVsPokemon(slot) {
+                const inputId = slot === 1 ? 'pokemon1-input' : 'pokemon2-input';
+                const containerId = slot === 1 ? 'pokemon1-container' : 'pokemon2-container';
+
+                const input = document.getElementById(inputId);
+                const container = document.getElementById(containerId);
+
+                if (!input || !container) return;
+
+                const query = input.value.trim();
+                if (!query) {
+                    alert('Ingresa un nombre o número de Pokémon');
+                    return;
+                }
+
+                container.innerHTML = '<div class="loading">BUSCANDO POKÉMON...</div>';
+
+                try {
+                    const pokemon = await utils.fetchPokemon(query);
+                    const fromCache = !!pokemon.fromCache;
+
+                    this.renderVsPokemon(slot, pokemon, fromCache);
+
+                    if (slot === 1) {
+                        this.vsState.pokemon1 = pokemon;
+                    } else {
+                        this.vsState.pokemon2 = pokemon;
+                    }
+
+                    this.updateBattleButton();
+                } catch (error) {
+                    console.error('Error buscando Pokémon para VS:', error);
+                    container.innerHTML = '<div class="error">NO SE ENCONTRÓ EL POKÉMON</div>';
+
+                    if (slot === 1) {
+                        this.vsState.pokemon1 = null;
+                    } else {
+                        this.vsState.pokemon2 = null;
+                    }
+
+                    this.updateBattleButton();
+                }
+            },
+
+            renderVsPokemon(slot, pokemon, fromCache = false) {
+                const containerId = slot === 1 ? 'pokemon1-container' : 'pokemon2-container';
+                const container = document.getElementById(containerId);
+                const template = document.getElementById('vs-card-template');
+
+                if (!container || !template) return;
+
+                const fragment = template.content.cloneNode(true);
+                const card = fragment.querySelector('.vs-card');
+
+                // Sprite
+                const spriteImg = card.querySelector('.vs-sprite');
+                spriteImg.src = pokemon.sprites.front_default || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
+                spriteImg.alt = pokemon.name;
+
+                // Nombre e ID
+                const nameEl = card.querySelector('.vs-name');
+                const idEl = card.querySelector('.vs-id');
+                if (nameEl) nameEl.textContent = pokemon.name.toUpperCase();
+                if (idEl) idEl.textContent = `#${pokemon.id.toString().padStart(3, '0')}`;
+
+                // Tipos
+                const typesContainer = card.querySelector('.vs-types');
+                if (typesContainer) {
+                    typesContainer.innerHTML = '';
+                    pokemon.types.forEach(t => {
+                        const span = document.createElement('span');
+                        span.className = `type-badge type-${t.type.name}`;
+                        span.textContent = t.type.name.toUpperCase();
+                        typesContainer.appendChild(span);
+                    });
+                }
+
+                // Estadísticas (barras)
+                const statsContainer = card.querySelector('.vs-stats');
+                if (statsContainer) {
+                    statsContainer.innerHTML = '';
+                    pokemon.stats.forEach(stat => {
+                        const label = stat.stat.name.toUpperCase().replace('-', ' ');
+                        const value = stat.base_stat;
+                        const percent = Math.min(value, 100);
+
+                        const item = document.createElement('div');
+                        item.className = 'vs-stat-item';
+                        item.innerHTML = `
+                            <div class="vs-stat-label">
+                                <span>${label}</span>
+                                <span>${value}</span>
+                            </div>
+                            <div class="vs-stat-bar-container">
+                                <div class="vs-stat-bar" style="width: ${percent}%"></div>
+                                <span class="vs-stat-number">${value}</span>
+                            </div>
+                        `;
+
+                        statsContainer.appendChild(item);
+                    });
+                }
+
+                // Badge API / Caché
+                const badge = card.querySelector('.badge');
+                if (badge) {
+                    if (fromCache) {
+                        badge.textContent = 'DESDE CACHÉ';
+                        badge.classList.remove('badge-api');
+                        badge.classList.add('badge-cache');
+                    } else {
+                        badge.textContent = 'DESDE API';
+                        badge.classList.remove('badge-cache');
+                        badge.classList.add('badge-api');
+                    }
+                }
+
+                // Datos base para favoritos (VS)
+                const pokemonData = {
+                    id: pokemon.id,
+                    name: pokemon.name.toUpperCase(),
+                    sprite: spriteImg.src,
+                    types: pokemon.types.map(t => t.type.name.toUpperCase())
+                };
+
+                // Favorito (icono pequeño en la cabecera)
+                const favoriteBtn = card.querySelector('.vs-favorite-btn');
+                if (favoriteBtn) {
+                    const icon = favoriteBtn.querySelector('i');
+                    const isFav = Storage.isFavorite(pokemon.id);
+                    if (isFav) {
+                        icon.classList.add('favorite');
+                    } else {
+                        icon.classList.remove('favorite');
+                    }
+
+                    favoriteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+
+                        if (Storage.isFavorite(pokemon.id)) {
+                            Storage.removeFromFavorites(pokemon.id);
+                            icon.classList.remove('favorite');
+                            alert('Eliminado de favoritos');
+                        } else {
+                            Storage.addToFavorites(pokemonData);
+                            icon.classList.add('favorite');
+                            alert('Agregado a favoritos');
+                        }
+                    });
+                }
+
+                // Botón de me gusta al estilo del buscador
+                const bigHeart = card.querySelector('.boton-corazon-vs');
+                if (bigHeart) {
+                    bigHeart.dataset.pokemonId = pokemon.id;
+
+                    const isFav = Storage.isFavorite(pokemon.id);
+                    if (isFav) {
+                        bigHeart.classList.add('favorito');
+                        bigHeart.textContent = '❤️';
+                    } else {
+                        bigHeart.classList.remove('favorito');
+                        bigHeart.textContent = '🩶';
+                    }
+
+                    bigHeart.addEventListener('click', (e) => {
+                        e.stopPropagation();
+
+                        if (Storage.isFavorite(pokemon.id)) {
+                            Storage.removeFromFavorites(pokemon.id);
+                            bigHeart.classList.remove('favorito');
+                            bigHeart.textContent = '🩶';
+                            alert('Eliminado de favoritos');
+                        } else {
+                            Storage.addToFavorites(pokemonData);
+                            bigHeart.classList.add('favorito');
+                            bigHeart.textContent = '❤️';
+                            alert('Agregado a favoritos');
+                        }
+                    });
+                }
+
+                container.innerHTML = '';
+                container.appendChild(fragment);
+            },
+
+            // VS Battle - Cálculo de batalla
+
+            getTypeEffectiveness(attackType, defendType) {
+                const info = typeChart[attackType] || null;
+                if (!info) return 1;
+
+                if (info.noEffect && info.noEffect.includes(defendType)) return 0;
+                if (info.superEffective && info.superEffective.includes(defendType)) return 2;
+                if (info.notVeryEffective && info.notVeryEffective.includes(defendType)) return 0.5;
+                return 1;
+            },
+
+            calculateTypeMultiplier(attacker, defender) {
+                const attackerTypes = attacker.types.map(t => t.type.name);
+                const defenderTypes = defender.types.map(t => t.type.name);
+
+                // Usamos el primer tipo del atacante como tipo principal del ataque
+                const mainAttackType = attackerTypes[0];
+                let multiplier = 1;
+
+                defenderTypes.forEach(defType => {
+                    multiplier *= this.getTypeEffectiveness(mainAttackType, defType);
+                });
+
+                return { attackType: mainAttackType, multiplier };
+            },
+
+            calculateBaseStats(pokemon) {
+                return pokemon.stats.reduce((sum, stat) => sum + (stat.base_stat || 0), 0);
+            },
+
+            buildEffectivenessItem(attackerName, defenderName, attackType, multiplier, grid) {
+                if (!grid) return;
+
+                const item = document.createElement('div');
+
+                let intensityClass = 'normal';
+                let description;
+                if (multiplier === 0) {
+                    intensityClass = 'weak';
+                    description = `${attackType.toUpperCase()} no tiene efecto contra ${defenderName.toUpperCase()}`;
+                } else if (multiplier < 1) {
+                    intensityClass = 'weak';
+                    description = `${attackType.toUpperCase()} es poco efectivo contra ${defenderName.toUpperCase()}`;
+                } else if (multiplier > 1) {
+                    intensityClass = 'super';
+                    description = `${attackType.toUpperCase()} es súper efectivo contra ${defenderName.toUpperCase()}`;
+                } else {
+                    intensityClass = 'normal';
+                    description = `${attackType.toUpperCase()} tiene efectividad normal contra ${defenderName.toUpperCase()}`;
+                }
+
+                item.className = `effectiveness-item ${intensityClass}`;
+                item.innerHTML = `
+                    <div>
+                        <strong>${attackerName.toUpperCase()}</strong> vs <strong>${defenderName.toUpperCase()}</strong>: x${multiplier.toFixed(2)}<br>
+                        <small>${description}</small>
+                    </div>
+                    <div class="effectiveness-multiplier">${multiplier.toFixed(2)}×</div>
+                `;
+
+                grid.appendChild(item);
+            },
+
+            renderBattleResults() {
+                const pokemon1 = this.vsState.pokemon1;
+                const pokemon2 = this.vsState.pokemon2;
+                if (!pokemon1 || !pokemon2) return;
+
+                const battleResults = document.getElementById('battle-results');
+                const template = document.getElementById('battle-results-template');
+                if (!battleResults || !template) return;
+
+                const fragment = template.content.cloneNode(true);
+
+                const total1 = this.calculateBaseStats(pokemon1);
+                const total2 = this.calculateBaseStats(pokemon2);
+
+                const typeInfo1 = this.calculateTypeMultiplier(pokemon1, pokemon2);
+                const typeInfo2 = this.calculateTypeMultiplier(pokemon2, pokemon1);
+
+                const finalScore1 = total1 * typeInfo1.multiplier;
+                const finalScore2 = total2 * typeInfo2.multiplier;
+
+                // Determinar ganador o empate
+                const winnerSection = fragment.querySelector('.winner-section');
+                const winnerNameEl = fragment.querySelector('.winner-name');
+                const winnerScoreEl = fragment.querySelector('.winner-score');
+
+                if (Math.abs(finalScore1 - finalScore2) < 0.01) {
+                    if (winnerSection) winnerSection.classList.add('tie');
+                    if (winnerNameEl) winnerNameEl.textContent = 'EMPATE';
+                    if (winnerScoreEl) winnerScoreEl.textContent = `Puntuación: ${finalScore1.toFixed(1)} vs ${finalScore2.toFixed(1)}`;
+                } else if (finalScore1 > finalScore2) {
+                    if (winnerNameEl) winnerNameEl.textContent = pokemon1.name.toUpperCase();
+                    if (winnerScoreEl) winnerScoreEl.textContent = `Puntuación: ${finalScore1.toFixed(1)}`;
+                } else {
+                    if (winnerNameEl) winnerNameEl.textContent = pokemon2.name.toUpperCase();
+                    if (winnerScoreEl) winnerScoreEl.textContent = `Puntuación: ${finalScore2.toFixed(1)}`;
+                }
+
+                // Tarjetas de puntuación izquierda/derecha
+                const scoreCards = fragment.querySelectorAll('.score-card');
+                if (scoreCards.length >= 2) {
+                    const leftCard = scoreCards[0];
+                    const rightCard = scoreCards[1];
+
+                    const leftName = leftCard.querySelector('.score-name');
+                    const leftValue = leftCard.querySelector('.score-value');
+                    const leftBreakdown = leftCard.querySelector('.score-breakdown');
+
+                    const rightName = rightCard.querySelector('.score-name');
+                    const rightValue = rightCard.querySelector('.score-value');
+                    const rightBreakdown = rightCard.querySelector('.score-breakdown');
+
+                    if (leftName) leftName.textContent = pokemon1.name.toUpperCase();
+                    if (leftValue) leftValue.textContent = finalScore1.toFixed(1);
+                    if (leftBreakdown) {
+                        leftBreakdown.innerHTML = `
+                            <div>Stats: ${total1}</div>
+                            <div>× Efectividad: ${typeInfo1.multiplier.toFixed(2)}</div>
+                        `;
+                    }
+
+                    if (rightName) rightName.textContent = pokemon2.name.toUpperCase();
+                    if (rightValue) rightValue.textContent = finalScore2.toFixed(1);
+                    if (rightBreakdown) {
+                        rightBreakdown.innerHTML = `
+                            <div>Stats: ${total2}</div>
+                            <div>× Efectividad: ${typeInfo2.multiplier.toFixed(2)}</div>
+                        `;
+                    }
+                }
+
+                // Ventajas de tipo
+                const effectivenessGrid = fragment.querySelector('.effectiveness-grid');
+                if (effectivenessGrid) {
+                    effectivenessGrid.innerHTML = '';
+                    this.buildEffectivenessItem(
+                        pokemon1.name,
+                        pokemon2.name,
+                        typeInfo1.attackType,
+                        typeInfo1.multiplier,
+                        effectivenessGrid
+                    );
+                    this.buildEffectivenessItem(
+                        pokemon2.name,
+                        pokemon1.name,
+                        typeInfo2.attackType,
+                        typeInfo2.multiplier,
+                        effectivenessGrid
+                    );
+                }
+
+                battleResults.innerHTML = '';
+                battleResults.appendChild(fragment);
+                battleResults.style.display = 'block';
+                battleResults.scrollIntoView({ behavior: 'smooth' });
             }
         };
 
@@ -1276,6 +1849,9 @@
                         if (htmlElements.favoritesContainer) {
                             handlers.renderFavorites();
                         }
+                        break;
+                    case 'vs.html':
+                        handlers.initVsPage();
                         break;
                 }
             }

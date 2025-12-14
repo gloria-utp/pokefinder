@@ -9,7 +9,7 @@
     <style>
         /* ===== VARIABLES CSS (Mismas que index.html) ===== */
         :root {
-            --color-bg: #f5e6d3;
+            --color-bg: #e0e0e0;
             --color-primary: #2d2d2d;
             --color-accent: #ffcc00;
             --color-secondary: #ff6b6b;
@@ -31,15 +31,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--color-bg);
-            font-family: var(--font-family);
-            color: var(--color-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-            padding-bottom: 2rem;
         }
 
         .container {
@@ -750,6 +741,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="shared.css">
 </head>
 
 <body>
@@ -1054,6 +1046,13 @@
             <div class="vs-stats">
                 <!-- Estadísticas se agregarán dinámicamente -->
             </div>
+
+            <!-- Botón de me gusta al estilo del buscador -->
+            <div class="contenedor-boton-corazon">
+                <div class="boton-corazon boton-corazon-vs" data-pokemon-id="">
+                    🩶
+                </div>
+            </div>
         </div>
     </template>
 
@@ -1112,167 +1111,7 @@
         </div>
     </template>
 
-    <script>
-        // JavaScript básico para la interfaz de VS Battle
-        document.addEventListener('DOMContentLoaded', function () {
-            // Elementos principales
-            const pokemon1Input = document.getElementById('pokemon1-input');
-            const pokemon2Input = document.getElementById('pokemon2-input');
-            const searchPokemon1Btn = document.getElementById('search-pokemon1-btn');
-            const searchPokemon2Btn = document.getElementById('search-pokemon2-btn');
-            const battleBtn = document.getElementById('battle-btn');
-            const randomBattleBtn = document.getElementById('random-battle-btn');
-            const clearBattleBtn = document.getElementById('clear-battle-btn');
-            const battleResults = document.getElementById('battle-results');
-            const pokemon1Container = document.getElementById('pokemon1-container');
-            const pokemon2Container = document.getElementById('pokemon2-container');
-
-            // Estado de la batalla
-            let pokemon1Loaded = true; // Cambiar a false cuando se implemente la lógica real
-            let pokemon2Loaded = true; // Cambiar a false cuando se implemente la lógica real
-
-            // Actualizar estado del botón de batalla
-            function updateBattleButton() {
-                battleBtn.disabled = !(pokemon1Loaded && pokemon2Loaded);
-            }
-
-            // Simular búsqueda de Pokémon 1
-            searchPokemon1Btn.addEventListener('click', function () {
-                const query = pokemon1Input.value.trim();
-                if (!query) {
-                    alert('Ingresa un nombre o número de Pokémon');
-                    return;
-                }
-
-                // Mostrar loading (simulado)
-                pokemon1Container.innerHTML = '<div class="loading">BUSCANDO POKÉMON...</div>';
-
-                // Simular delay de búsqueda
-                setTimeout(() => {
-                    // Aquí tus compañeros agregarán la lógica real
-                    pokemon1Loaded = true;
-                    updateBattleButton();
-                    alert(`Pokémon 1 buscado: ${query}`);
-                }, 500);
-            });
-
-            // Simular búsqueda de Pokémon 2
-            searchPokemon2Btn.addEventListener('click', function () {
-                const query = pokemon2Input.value.trim();
-                if (!query) {
-                    alert('Ingresa un nombre o número de Pokémon');
-                    return;
-                }
-
-                // Mostrar loading (simulado)
-                pokemon2Container.innerHTML = '<div class="loading">BUSCANDO POKÉMON...</div>';
-
-                // Simular delay de búsqueda
-                setTimeout(() => {
-                    // Aquí tus compañeros agregarán la lógica real
-                    pokemon2Loaded = true;
-                    updateBattleButton();
-                    alert(`Pokémon 2 buscado: ${query}`);
-                }, 500);
-            });
-
-            // Iniciar batalla
-            battleBtn.addEventListener('click', function () {
-                if (!pokemon1Loaded || !pokemon2Loaded) {
-                    alert('Debes cargar ambos Pokémon primero');
-                    return;
-                }
-
-                // Mostrar resultados
-                battleResults.style.display = 'block';
-                battleResults.scrollIntoView({ behavior: 'smooth' });
-
-                // Aquí tus compañeros agregarán la lógica real de batalla
-                console.log('¡Batalla iniciada!');
-            });
-
-            // Batalla aleatoria
-            randomBattleBtn.addEventListener('click', function () {
-                const randomPokemon = [
-                    'pikachu', 'charizard', 'blastoise', 'venusaur',
-                    'mewtwo', 'gyarados', 'dragonite', 'snorlax',
-                    'gengar', 'alakazam', 'machamp', 'tyranitar'
-                ];
-
-                const random1 = randomPokemon[Math.floor(Math.random() * randomPokemon.length)];
-                const random2 = randomPokemon[Math.floor(Math.random() * randomPokemon.length)];
-
-                pokemon1Input.value = random1;
-                pokemon2Input.value = random2;
-
-                // Simular búsqueda automática
-                searchPokemon1Btn.click();
-                setTimeout(() => searchPokemon2Btn.click(), 300);
-            });
-
-            // Limpiar batalla
-            clearBattleBtn.addEventListener('click', function () {
-                if (confirm('¿Limpiar toda la batalla?')) {
-                    pokemon1Input.value = '';
-                    pokemon2Input.value = '';
-                    pokemon1Loaded = false;
-                    pokemon2Loaded = false;
-                    battleResults.style.display = 'none';
-                    updateBattleButton();
-
-                    // Restaurar tarjetas de ejemplo
-                    // (En la implementación real, esto se manejará diferente)
-                }
-            });
-
-            // Botones de favoritos en las tarjetas
-            document.querySelectorAll('.vs-favorite-btn').forEach(btn => {
-                btn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    const icon = this.querySelector('i');
-                    icon.classList.toggle('favorite');
-
-                    if (icon.classList.contains('favorite')) {
-                        alert('Agregado a favoritos');
-                    } else {
-                        alert('Eliminado de favoritos');
-                    }
-                });
-            });
-
-            // Acciones post-batalla
-            document.getElementById('rematch-btn')?.addEventListener('click', function () {
-                battleBtn.click(); // Revancha
-            });
-
-            document.getElementById('swap-btn')?.addEventListener('click', function () {
-                // Intercambiar Pokémon
-                const temp = pokemon1Input.value;
-                pokemon1Input.value = pokemon2Input.value;
-                pokemon2Input.value = temp;
-
-                // Simular nueva búsqueda
-                searchPokemon1Btn.click();
-                setTimeout(() => searchPokemon2Btn.click(), 300);
-            });
-
-            document.getElementById('save-battle-btn')?.addEventListener('click', function () {
-                alert('Batalla guardada (esta función se implementará completamente)');
-            });
-
-            // Permitir Enter en los inputs
-            pokemon1Input.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') searchPokemon1Btn.click();
-            });
-
-            pokemon2Input.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') searchPokemon2Btn.click();
-            });
-
-            // Estado inicial
-            updateBattleButton();
-        });
-    </script>
+    <script src="shared.js"></script>
 </body>
 
 </html>
