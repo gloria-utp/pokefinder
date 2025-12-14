@@ -26,6 +26,43 @@
     box-sizing: border-box;
 }
 
+/* Fondo global con textura de puntos y PokéBall central */
+body {
+    background-color: var(--color-fondo);
+    background-image: radial-gradient(#000 1px, transparent 1px);
+    background-size: 20px 20px;
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 2rem;
+    color: var(--border-color);
+    min-height: 100vh;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-20deg);
+    width: 80vmin;
+    height: 80vmin;
+    border: 16px solid #000;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, #fff 12%, #000 12%, #000 16%, transparent 16%),
+        linear-gradient(180deg, transparent 46%, #000 46%, #000 54%, transparent 54%),
+        linear-gradient(180deg, #ff3e3e 50%, #ffffff 50%);
+    box-shadow: 24px 24px 0px rgba(0,0,0,0.2);
+    z-index: -1;
+    opacity: 0.8;
+    pointer-events: none;
+    filter: grayscale(0.2) contrast(1.2);
+}
+
 
 /* ETIQUETAS DE TIPO DE ESPECIE DE POKEMON */
 .etiqueta-tipo {
