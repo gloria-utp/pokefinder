@@ -982,15 +982,23 @@
                 </div>
             `,
 
-            error: (message) => `
+            // Si ya existe un template 'error', cámbialo o añade estos nuevos:
+
+            pokemonError: () => `
                 <div class="mensaje-error">
-                    ERROR: ${message.toUpperCase()}
+                    ERROR: POKÉMON NO ENCONTRADO
+                </div>
+                `,
+
+            abilityError: () => `
+                <div class="mensaje-error">
+                    ERROR: HABILIDAD NO ENCONTRADA
                 </div>
             `,
 
             loading: (term = '') => `
                 <div class="cargando">
-                    BUSCANDO "${term.toUpperCase() || 'DATOS'}"...
+                    CARGANDO DATOS...
                 </div>
             `
         };
@@ -1137,7 +1145,15 @@
                         this.configurarEventosHabilidad();
                     }
                 } catch (error) {
-                    utils.render(htmlElements.resultsContainer, templates.error('No se encontró resultado'));
+                    const searchType = htmlElements.searchTypeSelect.value;
+
+                    if (searchType === 'pokemon') {
+                        utils.render(htmlElements.resultsContainer, templates.pokemonError());
+                    } else if (searchType === 'ability') {
+                        utils.render(htmlElements.resultsContainer, templates.abilityError());
+                    } else {
+                        utils.render(htmlElements.resultsContainer, templates.error('No se encontró resultado'));
+                    }
                 }
             },
 
@@ -1191,13 +1207,26 @@
 
             onAbilityPokemonClick(e) {
                 const pokemonBox = e.target.closest('.pokemon-con-habilidad');
-                if (pokemonBox) {
+                if (pokemonBox && htmlElements.searchTypeSelect) {
                     const pokemonName = pokemonBox.dataset.pokemonName;
 
-                    if (pokemonName) {
-                        htmlElements.input.value = pokemonName;
+                    // 1. Cambiar el tipo de búsqueda a "Pokémon"
+                    htmlElements.searchTypeSelect.value = 'pokemon';
+
+                    // 2. Actualizar el placeholder (opcional pero buena práctica)
+                    htmlElements.input.placeholder = 'NOMBRE O ID...';
+
+                    // 3. Poner el nombre del Pokémon en el input
+                    htmlElements.input.value = pokemonName;
+
+                    // 4. Disparar el evento de cambio para actualizar UI
+                    htmlElements.searchTypeSelect.dispatchEvent(new Event('change'));
+
+                    // 5. Enfocar el input y disparar búsqueda
+                    setTimeout(() => {
+                        utils.focusInput(htmlElements.input);
                         htmlElements.form.dispatchEvent(new Event('submit'));
-                    }
+                    }, 100);
                 }
             },
 
@@ -1266,6 +1295,22 @@
                 }
             },
 
+            clearAllHistory() {
+                localStorage.removeItem('pokemonHistory');
+                const history = Storage.getHistory();
+                history.forEach(pokemon => {
+                    Storage.removeFromCache(pokemon.id);
+                });
+                this.renderHistory();
+                console.log('Historial limpiado completamente');
+            },
+
+            clearAllFavorites() {
+                localStorage.removeItem('pokemonFavorites');
+                this.renderFavorites();
+                console.log('Favoritos limpiados completamente');
+            },
+
             renderHistory() {
                 const history = Storage.getHistory();
 
@@ -1295,6 +1340,10 @@
                         e.stopPropagation();
                         this.handleHistoryButtonAction(e.currentTarget);
                     });
+                });
+
+                document.getElementById('clear-all-btn')?.addEventListener('click', () => {
+                    this.clearAllHistory();
                 });
             },
 
@@ -1342,6 +1391,10 @@
                         e.stopPropagation();
                         this.handleFavoritesButtonAction(e.currentTarget);
                     });
+                });
+
+                document.getElementById('clear-favorites-btn')?.addEventListener('click', () => {
+                    this.clearAllFavorites();
                 });
             },
 
@@ -1403,7 +1456,7 @@
                 // Batalla aleatoria sencilla
                 if (randomBattleBtn) {
                     randomBattleBtn.addEventListener('click', () => {
-                        const maxId = 151; 
+                        const maxId = 151;
                         const randomId1 = Math.floor(Math.random() * maxId) + 1;
                         const randomId2 = Math.floor(Math.random() * maxId) + 1;
 
