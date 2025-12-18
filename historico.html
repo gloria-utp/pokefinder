@@ -103,6 +103,7 @@
             display: flex;
             gap: 1rem;
             margin-bottom: 2rem;
+            margin-top: 2rem;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -493,15 +494,7 @@
         <h1><i class="fas fa-history"></i> HISTORIAL DE BÚSQUEDAS</h1>
 
         <!-- CONTROLES -->
-        <div class="history-controls">
-            <button class="btn btn-danger" id="clear-all-btn">
-                <i class="fas fa-trash"></i> LIMPIAR TODO EL HISTORIAL
-            </button>
-            <button class="btn btn-secondary" id="clear-cache-btn">
-                <i class="fas fa-database"></i> LIMPIAR CACHÉ COMPLETO
-            </button>
-        </div>
-
+        
         <!-- CONTENEDOR DEL HISTORIAL -->
         <div id="contenedor-tarjetas-historial">
             <!-- Grid de Pokémon del histórico -->
@@ -619,6 +612,16 @@
                 </a>
             </div>
         </div>
+
+        <div class="history-controls">
+            <button class="btn btn-danger" id="clear-all-btn">
+                🗑️ LIMPIAR TODO
+            </button>
+            <!-- <button class="btn btn-secondary" id="clear-cache-btn">
+                <i class="fas fa-database"></i> LIMPIAR CACHÉ COMPLETO
+            </button> -->
+        </div>
+
     </main>
 
     <!-- MODAL DE CONFIRMACIÓN -->
