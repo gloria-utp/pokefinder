@@ -10,12 +10,12 @@
 **Desarrollo de Software V — Proyecto Final**
 
 **Estudiantes:**  
-- Miguel Caballero  
-- Jorge Mendoza  
-- Gloria Moreno  
+- Miguel Caballero @Caballero-Miguel
+- Jorge Mendoza @Ge0rgeML 
+- Gloria Moreno @gloria-utp
 
 **Facilitador:**  
-Erick Agrazal  
+Erick Agrazal @erickAgrazal
 
 **Año:** 2025
 
@@ -127,14 +127,34 @@ Endpoints principales:
 ---
 
 ## 🖼️ Capturas de Pantalla
-*(Inserta aquí tus imágenes cuando el proyecto esté completo)*
+
+### 🔍 Pantalla principal
+![Pantalla principal](capturas/pokefinder_1.png)
+
+### 📄 Detalle del Pokémon
+![Detalle Pokémon](capturas/pokefinder_3.png)
+
+### ⚔️ VS Battle
+![VS Battle](capturas/pokefinder_6.png)
+![VS Battle Detalle](capturas/pokefinder_7.png)
+
+### ⭐ Favoritos
+![Favoritos](capturas/pokefinder_5.png)
+
+### 🔍 Pantalla habilidad
+![habilidad de cada pokemon](capturas/pokefinder_2.png)
+
+### 📄 Historial de busqueda
+![Historico](capturas/pokefinder_6.png)
+
+
 
 ---
 
 ## 🔗 Demo (GitHub Pages)
 
 **Link del Proyecto:**  
-👉 _Agrega aquí tu URL cuando actives GitHub Pages_
+👉 https://github.com/gloria-utp/pokefinder
 
 ---
 
