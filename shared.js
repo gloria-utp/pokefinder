@@ -1,6 +1,6 @@
 (() => {
     const App = (() => {
-        // 1. Referencias al DOM
+
         const htmlElements = {
             form: document.querySelector('#formulario-busqueda'),
             input: document.querySelector('#entrada-pokemon'),
@@ -10,7 +10,7 @@
             searchTypeSelect: document.querySelector('#search-type-select')
         };
 
-        // 2. Módulo de Almacenamiento (LocalStorage)
+
         const Storage = {
             getHistory() {
                 try {
@@ -125,7 +125,7 @@
                 const updatedHistory = history.filter(item => item.id !== pokemonId);
                 this.saveHistory(updatedHistory);
 
-                // Elimina también el cache cuando se elimina del historial
+                
                 this.removeFromCache(pokemonId);
 
                 return updatedHistory;
@@ -143,7 +143,7 @@
             }
         };
 
-        // 3. Funciones de Utilidad
+
         const utils = {
             render(container, html) {
                 if (container && html) {
@@ -219,17 +219,16 @@
                 try {
                     const queryStr = typeof query === 'number' ? query.toString() : query;
 
-                    // Primero verificar si está en cache
+           
                     const cached = await this.fetchPokemonFromCache(queryStr);
                     if (cached) {
                         return { ...cached, fromCache: true };
                     }
 
-                    // Si no está en cache, busca en API
+                    
                     const url = `https://pokeapi.co/api/v2/pokemon/${queryStr.toLowerCase()}`;
                     const data = await this.fetchWithTimeout(url);
 
-                    // Guarda también en caché para futuras búsquedas (VS y buscador)
                     const cacheData = {
                         id: data.id,
                         name: data.name,
@@ -250,27 +249,30 @@
 
             async fetchPokemonFromCache(query) {
                 try {
-                    // Intenta parsear como ID
+             
+                    
                     const id = parseInt(query);
                     if (!isNaN(id)) {
                         const cached = Storage.getFromCache(id);
                         if (cached) {
-                            // Verifica si el cache no es muy viejo (1 hora)
+                
+                            
                             const cacheAge = new Date() - new Date(cached.cachedAt);
-                            if (cacheAge < 3600000) { // 1 hora en milisegundos
+                            if (cacheAge < 3600000) { 
                                 return cached;
                             }
                         }
                     }
 
-                    // Si no es ID o no está en cache, busca por nombre en el historial
+               
                     const history = Storage.getHistory();
                     const fromHistory = history.find(p =>
                         p.name.toLowerCase() === query.toLowerCase()
                     );
 
                     if (fromHistory) {
-                        // Verifica si está en cache también
+
+                        
                         const cached = Storage.getFromCache(fromHistory.id);
                         if (cached) {
                             const cacheAge = new Date() - new Date(cached.cachedAt);
@@ -405,7 +407,8 @@
             async fetchPokemonWithEvolution(query) {
                 const pokemon = await this.fetchPokemon(query);
 
-                // Guarda en cache si vino de API
+         
+                
                 if (!pokemon.fromCache) {
                     const cacheData = {
                         id: pokemon.id,
@@ -483,9 +486,9 @@
             }
         };
 
-        // 4. Plantillas HTML (Vistas)
+
         const templates = {
-            // Tarjeta principal de Pokémon
+            
             card: (pokemon, evolutionChain = [], fromCache = false) => {
                 const typesHtml = pokemon.types.map(t => `<span class="etiqueta-tipo">${t.type.name}</span>`).join('');
 
@@ -796,7 +799,8 @@
                 const isFavorited = Storage.isFavorite(pokemon.id);
                 const heartButtonClass = isFavorited ? 'boton-corazon favorito' : 'boton-corazon';
 
-                // Badge de origen (API o Cache)
+  
+                
                 const badgeText = fromCache ? 'DESDE CACHE' : 'DESDE API';
                 const badgeColor = fromCache ? 'var(--color-habilidad-normal)' : 'var(--color-accento-secundario)';
                 const badgeStyle = `
@@ -844,7 +848,7 @@
                 `;
             },
 
-            // Plantilla para habilidades
+
             abilityCard: (abilityData, pokemonWithAbility = []) => {
                 const abilityName = abilityData.name.toUpperCase();
                 const abilityId = abilityData.id;
@@ -911,7 +915,8 @@
                 `;
             },
 
-            // Tarjeta para historial
+       
+            
             historyCard: (pokemonData) => {
                 const typesHtml = pokemonData.types
                     .map(type => `<span class="etiqueta-tipo-pequena">${type}</span>`)
@@ -947,7 +952,8 @@
                 `;
             },
 
-            // Tarjeta para favoritos
+     
+            
             favoritesCard: (pokemonData) => {
                 const typesHtml = pokemonData.types
                     .map(type => `<span class="etiqueta-tipo-pequena">${type}</span>`)
@@ -975,14 +981,16 @@
                 `;
             },
 
-            // Estados vacíos
+
+            
             emptyState: (message) => `
                 <div class="estado-vacio">
                     ${message}
                 </div>
             `,
 
-            // Si ya existe un template 'error', cámbialo o añade estos nuevos:
+       
+            
 
             pokemonError: () => `
                 <div class="mensaje-error">
@@ -1003,7 +1011,7 @@
             `
         };
 
-        // Tabla simplificada de efectividad de tipos
+
         const typeChart = {
             normal: {
                 superEffective: [],
@@ -1097,25 +1105,28 @@
             }
         };
 
-        // 5. Manejadores de Eventos
-        const handlers = {
-            // Busca página
 
-            // Maneja cambio de tipo de búsqueda
+        
+        const handlers = {
+  
+            
             onSearchTypeChange() {
                 const searchType = htmlElements.searchTypeSelect.value;
 
-                // Cambia placeholder según tipo
+           
+                
                 if (searchType === 'pokemon') {
                     htmlElements.input.placeholder = 'NOMBRE O ID...';
                 } else if (searchType === 'ability') {
                     htmlElements.input.placeholder = 'NOMBRE DE HABILIDAD...';
                 }
 
-                // Guarda preferencia
+
+                
                 localStorage.setItem('lastSearchType', searchType);
 
-                // Enfoca el input después de cambiar
+
+                
                 utils.focusInput(htmlElements.input);
             },
 
@@ -1134,12 +1145,13 @@
 
                 try {
                     if (searchType === 'pokemon') {
-                        // Busca Pokémon
+                 
+                        
                         const { pokemon, evolutionChain, fromCache } = await utils.fetchPokemonWithEvolution(term);
                         utils.render(htmlElements.resultsContainer, templates.card(pokemon, evolutionChain, fromCache));
                         this.configurarEventosTarjeta();
                     } else if (searchType === 'ability') {
-                        // Busca Habilidad
+               
                         const { ability, pokemonWithAbility } = await utils.fetchAbilityWithPokemon(term);
                         utils.render(htmlElements.resultsContainer, templates.abilityCard(ability, pokemonWithAbility, false));
                         this.configurarEventosHabilidad();
@@ -1210,19 +1222,19 @@
                 if (pokemonBox && htmlElements.searchTypeSelect) {
                     const pokemonName = pokemonBox.dataset.pokemonName;
 
-                    // 1. Cambiar el tipo de búsqueda a "Pokémon"
+                    
                     htmlElements.searchTypeSelect.value = 'pokemon';
 
-                    // 2. Actualizar el placeholder (opcional pero buena práctica)
+                    
                     htmlElements.input.placeholder = 'NOMBRE O ID...';
 
-                    // 3. Poner el nombre del Pokémon en el input
+                    
                     htmlElements.input.value = pokemonName;
 
-                    // 4. Disparar el evento de cambio para actualizar UI
+                    
                     htmlElements.searchTypeSelect.dispatchEvent(new Event('change'));
 
-                    // 5. Enfocar el input y disparar búsqueda
+                    
                     setTimeout(() => {
                         utils.focusInput(htmlElements.input);
                         htmlElements.form.dispatchEvent(new Event('submit'));
@@ -1249,7 +1261,7 @@
                 });
             },
 
-            // Histórico página
+            
             searchPokemon(pokemonName) {
                 localStorage.setItem('lastSearch', pokemonName);
                 window.location.href = 'buscar.html';
@@ -1347,7 +1359,7 @@
                 });
             },
 
-            // Favoritos página
+            
             deleteFromFavorites(pokemonId) {
                 Storage.removeFromFavorites(pokemonId);
                 this.renderFavorites();
@@ -1398,7 +1410,7 @@
                 });
             },
 
-            // VS batalla - Búsqueda v1
+            
             vsState: {
                 pokemon1: null,
                 pokemon2: null
@@ -1424,21 +1436,21 @@
                     battleResults.style.display = 'none';
                 }
 
-                // Reemplaza las tarjetas de ejemplo por el estado vacío
+                
                 this.renderEmptyVsCard(pokemon1Container, 'POKÉMON 1');
                 this.renderEmptyVsCard(pokemon2Container, 'POKÉMON 2');
 
-                // Buscar Pokémon 1
+                
                 searchPokemon1Btn.addEventListener('click', () => {
                     this.searchVsPokemon(1);
                 });
 
-                // Buscar Pokémon 2
+                
                 searchPokemon2Btn.addEventListener('click', () => {
                     this.searchVsPokemon(2);
                 });
 
-                // Enter en inputs
+                
                 pokemon1Input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1453,7 +1465,7 @@
                     }
                 });
 
-                // Batalla aleatoria sencilla
+                
                 if (randomBattleBtn) {
                     randomBattleBtn.addEventListener('click', () => {
                         const maxId = 151;
@@ -1468,7 +1480,7 @@
                     });
                 }
 
-                // Limpiar batalla
+                
                 if (clearBattleBtn) {
                     clearBattleBtn.addEventListener('click', () => {
                         pokemon1Input.value = '';
@@ -1572,18 +1584,18 @@
                 const fragment = template.content.cloneNode(true);
                 const card = fragment.querySelector('.vs-card');
 
-                // Sprite
+                
                 const spriteImg = card.querySelector('.vs-sprite');
                 spriteImg.src = pokemon.sprites.front_default || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
                 spriteImg.alt = pokemon.name;
 
-                // Nombre e ID
+                
                 const nameEl = card.querySelector('.vs-name');
                 const idEl = card.querySelector('.vs-id');
                 if (nameEl) nameEl.textContent = pokemon.name.toUpperCase();
                 if (idEl) idEl.textContent = `#${pokemon.id.toString().padStart(3, '0')}`;
 
-                // Tipos
+                
                 const typesContainer = card.querySelector('.vs-types');
                 if (typesContainer) {
                     typesContainer.innerHTML = '';
@@ -1595,7 +1607,7 @@
                     });
                 }
 
-                // Estadísticas (barras)
+                
                 const statsContainer = card.querySelector('.vs-stats');
                 if (statsContainer) {
                     statsContainer.innerHTML = '';
@@ -1621,7 +1633,7 @@
                     });
                 }
 
-                // Badge API / Caché
+                
                 const badge = card.querySelector('.badge');
                 if (badge) {
                     if (fromCache) {
@@ -1635,7 +1647,7 @@
                     }
                 }
 
-                // Datos base para favoritos (VS)
+                
                 const pokemonData = {
                     id: pokemon.id,
                     name: pokemon.name.toUpperCase(),
@@ -1643,7 +1655,7 @@
                     types: pokemon.types.map(t => t.type.name.toUpperCase())
                 };
 
-                // Favorito (icono pequeño en la cabecera)
+                
                 const favoriteBtn = card.querySelector('.vs-favorite-btn');
                 if (favoriteBtn) {
                     const icon = favoriteBtn.querySelector('i');
@@ -1669,7 +1681,7 @@
                     });
                 }
 
-                // Botón de me gusta al estilo del buscador
+                
                 const bigHeart = card.querySelector('.boton-corazon-vs');
                 if (bigHeart) {
                     bigHeart.dataset.pokemonId = pokemon.id;
@@ -1704,7 +1716,7 @@
                 container.appendChild(fragment);
             },
 
-            // VS Battle - Cálculo de batalla
+            
 
             getTypeEffectiveness(attackType, defendType) {
                 const info = typeChart[attackType] || null;
@@ -1720,7 +1732,7 @@
                 const attackerTypes = attacker.types.map(t => t.type.name);
                 const defenderTypes = defender.types.map(t => t.type.name);
 
-                // Usamos el primer tipo del atacante como tipo principal del ataque
+                
                 const mainAttackType = attackerTypes[0];
                 let multiplier = 1;
 
@@ -1788,7 +1800,7 @@
                 const finalScore1 = total1 * typeInfo1.multiplier;
                 const finalScore2 = total2 * typeInfo2.multiplier;
 
-                // Determinar ganador o empate
+                
                 const winnerSection = fragment.querySelector('.winner-section');
                 const winnerNameEl = fragment.querySelector('.winner-name');
                 const winnerScoreEl = fragment.querySelector('.winner-score');
@@ -1805,7 +1817,7 @@
                     if (winnerScoreEl) winnerScoreEl.textContent = `Puntuación: ${finalScore2.toFixed(1)}`;
                 }
 
-                // Tarjetas de puntuación izquierda/derecha
+                
                 const scoreCards = fragment.querySelectorAll('.score-card');
                 if (scoreCards.length >= 2) {
                     const leftCard = scoreCards[0];
@@ -1838,7 +1850,7 @@
                     }
                 }
 
-                // Ventajas de tipo
+                
                 const effectivenessGrid = fragment.querySelector('.effectiveness-grid');
                 if (effectivenessGrid) {
                     effectivenessGrid.innerHTML = '';
@@ -1865,7 +1877,7 @@
             }
         };
 
-        // 6. Inicialización (API Pública)
+        
         return {
             init() {
                 const currentPage = window.location.pathname.split('/').pop();
@@ -1875,19 +1887,19 @@
                     case '':
                     case 'index.html':
                         if (htmlElements.form) {
-                            // Configura select de tipo de búsqueda
+                            
                             if (htmlElements.searchTypeSelect) {
                                 htmlElements.searchTypeSelect.addEventListener('change', handlers.onSearchTypeChange.bind(handlers));
 
-                                // Restaura última preferencia de búsqueda
+                                
                                 const lastSearchType = localStorage.getItem('lastSearchType') || 'pokemon';
                                 htmlElements.searchTypeSelect.value = lastSearchType;
 
-                                // Llama al handler para actualizar placeholder
+                                
                                 handlers.onSearchTypeChange();
                             }
 
-                            // Configura formulario
+                            
                             htmlElements.form.addEventListener('submit', handlers.onSearchSubmit.bind(handlers));
                             document.addEventListener('keydown', handlers.onKeyDown);
                             utils.focusInput(htmlElements.input);
@@ -1911,7 +1923,7 @@
         };
     })();
 
-    // Ejecuta la aplicación
+    
     document.addEventListener('DOMContentLoaded', () => {
         App.init();
     });
