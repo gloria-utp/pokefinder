@@ -153,6 +153,11 @@ Endpoints principales:
 
 ## 🔗 Demo (GitHub Pages)
 
+**Demo en vivo:**  
+👉 https://gloria-utp.github.io/pokefinder/
+
+---
+
 **Link del Proyecto:**  
 👉 https://github.com/gloria-utp/pokefinder
 
